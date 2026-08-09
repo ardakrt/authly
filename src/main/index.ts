@@ -14,6 +14,7 @@ import { LockService } from './services/LockService';
 import { UpdateService } from './services/UpdateService';
 import { createMainWindow } from './window/createMainWindow';
 import { TrayService } from './window/TrayService';
+import { UPDATE_STATE_EVENT } from '@shared/ipc/channels';
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -60,7 +61,14 @@ app.whenReady().then(async () => {
   const settingsService = new SettingsService(new SettingsRepository(localDatabase.connection));
   const backupService = new BackupService(accountService);
   const lockService = new LockService(new SettingsRepository(localDatabase.connection));
-  const updateService = new UpdateService();
+  const updateService = new UpdateService({
+    beforeInstall: () => trayService?.setQuitting(true),
+  });
+  updateService.onStateChange((state) => {
+    for (const window of BrowserWindow.getAllWindows()) {
+      if (!window.isDestroyed()) window.webContents.send(UPDATE_STATE_EVENT, state);
+    }
+  });
 
   registerAppHandlers(
     accountService,

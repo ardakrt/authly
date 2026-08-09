@@ -17,5 +17,8 @@ export const IPC_CHANNELS = {
   removePin: 'lock:remove-pin',
   lockApp: 'lock:lock-app',
   checkUpdate: 'app:check-update',
-  openExternalUrl: 'app:open-external-url',
+  getUpdateState: 'app:get-update-state',
+  installUpdate: 'app:install-update',
 } as const;
+
+export const UPDATE_STATE_EVENT = 'app:update-state';

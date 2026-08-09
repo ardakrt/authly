@@ -1,8 +1,9 @@
-import { shell } from 'electron';
 import {
   checkUpdateRequestSchema,
-  openExternalUrlRequestSchema,
+  getUpdateStateRequestSchema,
+  installUpdateRequestSchema,
   updateInfoSchema,
+  updateStateSchema,
 } from '@shared/schemas/update';
 import type { UpdateService } from '../services/UpdateService';
 import { app, clipboard, ipcMain, type IpcMainInvokeEvent } from 'electron';
@@ -266,13 +267,26 @@ export function registerAppHandlers(
     }
   });
 
-  ipcMain.handle(IPC_CHANNELS.openExternalUrl, async (event, rawRequest: unknown) => {
+  ipcMain.handle(IPC_CHANNELS.getUpdateState, (event, rawRequest: unknown) => {
     try {
       assertTrustedSender(event, developmentUrl);
-      const { url } = openExternalUrlRequestSchema.parse(rawRequest);
-      await shell.openExternal(url);
+      getUpdateStateRequestSchema.parse(rawRequest);
+      return updateStateSchema.parse(updateService.getState());
     } catch {
-      throw new Error('Bağlantı açılamadı.');
+      throw new Error('Güncelleme durumu okunamadı.');
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.installUpdate, async (event, rawRequest: unknown) => {
+    try {
+      assertTrustedSender(event, developmentUrl);
+      lockService.assertNotLocked();
+      installUpdateRequestSchema.parse(rawRequest);
+      await updateService.downloadAndInstall();
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Güncelleme yüklenemedi.', {
+        cause: error,
+      });
     }
   });
 }

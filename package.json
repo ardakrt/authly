@@ -1,6 +1,6 @@
 {
   "name": "authapp",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "private": true,
   "description": "Windows-first, offline desktop authenticator",
   "author": "Arda Kartal <ardakartaskisisel@gmail.com>",
@@ -34,6 +34,7 @@
     "@fontsource/jetbrains-mono": "5.3.0",
     "@fontsource/space-grotesk": "5.3.0",
     "better-sqlite3": "^13.0.3",
+    "electron-updater": "^6.8.9",
     "jsqr": "^1.4.0",
     "lucide-react": "1.30.0",
     "otpauth": "^9.5.1",
@@ -81,6 +82,7 @@
       }
     ],
     "asar": true,
+    "electronUpdaterCompatibility": ">=2.16",
     "directories": {
       "buildResources": "resources",
       "output": "dist"
@@ -92,6 +94,7 @@
     ],
     "win": {
       "icon": "resources/icon.ico",
+      "artifactName": "Authly-Setup-${version}.${ext}",
       "target": [
         {
           "target": "nsis",

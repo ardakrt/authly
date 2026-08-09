@@ -13,7 +13,7 @@ import type {
   ImportBackupResult,
 } from '../schemas/backup';
 import type { AppSettings, UpdateSettingsRequest } from '../schemas/settings';
-import type { UpdateInfo } from '../schemas/update';
+import type { UpdateInfo, UpdateState } from '../schemas/update';
 import type {
   LockStatus,
   RemovePinRequest,
@@ -40,5 +40,7 @@ export interface AuthappApi {
   removePin: (request: RemovePinRequest) => Promise<void>;
   lockApp: () => Promise<void>;
   checkUpdate: () => Promise<UpdateInfo>;
-  openExternalUrl: (url: string) => Promise<void>;
+  getUpdateState: () => Promise<UpdateState>;
+  installUpdate: () => Promise<void>;
+  onUpdateState: (listener: (state: UpdateState) => void) => () => void;
 }

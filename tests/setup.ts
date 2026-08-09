@@ -33,7 +33,7 @@ Object.defineProperty(window, 'authapp', {
   value: {
     getRuntimeInfo: vi.fn().mockResolvedValue({
       appName: 'Authly',
-      appVersion: '0.3.4',
+      appVersion: '0.3.5',
       platform: 'win32',
       packaged: false,
     }),
@@ -67,9 +67,14 @@ Object.defineProperty(window, 'authapp', {
     lockApp: vi.fn().mockResolvedValue(undefined),
     checkUpdate: vi.fn().mockResolvedValue({
       hasUpdate: false,
-      currentVersion: '0.3.4',
-      latestVersion: '0.3.4',
+      currentVersion: '0.3.5',
+      latestVersion: '0.3.5',
     }),
-    openExternalUrl: vi.fn().mockResolvedValue(undefined),
+    getUpdateState: vi.fn().mockResolvedValue({
+      phase: 'idle',
+      currentVersion: '0.3.5',
+    }),
+    installUpdate: vi.fn().mockResolvedValue(undefined),
+    onUpdateState: vi.fn().mockReturnValue(() => {}),
   },
 });

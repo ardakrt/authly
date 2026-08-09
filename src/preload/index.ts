@@ -1,6 +1,11 @@
-import { openExternalUrlRequestSchema, updateInfoSchema } from '@shared/schemas/update';
-import { contextBridge, ipcRenderer } from 'electron';
-import { IPC_CHANNELS } from '@shared/ipc/channels';
+import {
+  getUpdateStateRequestSchema,
+  installUpdateRequestSchema,
+  updateInfoSchema,
+  updateStateSchema,
+} from '@shared/schemas/update';
+import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
+import { IPC_CHANNELS, UPDATE_STATE_EVENT } from '@shared/ipc/channels';
 import {
   accountDtoSchema,
   createAccountRequestSchema,
@@ -112,11 +117,19 @@ const api: AuthappApi = Object.freeze({
   },
   checkUpdate: async () =>
     updateInfoSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.checkUpdate, {})),
-  openExternalUrl: async (url: string) => {
-    await ipcRenderer.invoke(
-      IPC_CHANNELS.openExternalUrl,
-      openExternalUrlRequestSchema.parse({ url }),
-    );
+  getUpdateState: async () =>
+    updateStateSchema.parse(
+      await ipcRenderer.invoke(IPC_CHANNELS.getUpdateState, getUpdateStateRequestSchema.parse({})),
+    ),
+  installUpdate: async () => {
+    await ipcRenderer.invoke(IPC_CHANNELS.installUpdate, installUpdateRequestSchema.parse({}));
+  },
+  onUpdateState: (listener: Parameters<AuthappApi['onUpdateState']>[0]) => {
+    const handler = (_event: IpcRendererEvent, rawState: unknown) => {
+      listener(updateStateSchema.parse(rawState));
+    };
+    ipcRenderer.on(UPDATE_STATE_EVENT, handler);
+    return () => ipcRenderer.removeListener(UPDATE_STATE_EVENT, handler);
   },
 });
 

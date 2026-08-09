@@ -2,11 +2,13 @@ import { ArrowUpCircle, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { UpdateInfo } from '@shared/schemas/update';
 import { useLanguage } from '../hooks/useLanguage';
+import { useUpdateState } from '../hooks/useUpdateState';
 
 export function UpdateToast(): React.JSX.Element | null {
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [visible, setVisible] = useState(false);
   const { t } = useLanguage();
+  const updateState = useUpdateState();
 
   useEffect(() => {
     let isMounted = true;
@@ -27,11 +29,13 @@ export function UpdateToast(): React.JSX.Element | null {
 
   if (!visible || !updateInfo) return null;
 
+  const downloading = updateState?.phase === 'downloading';
+  const installing = updateState?.phase === 'downloaded';
+  const updateFailed = updateState?.phase === 'error';
+  const progress = Math.round(updateState?.progress ?? 0);
+
   const handleInstall = () => {
-    if (updateInfo.releaseUrl) {
-      void window.authapp.openExternalUrl(updateInfo.releaseUrl);
-    }
-    setVisible(false);
+    void window.authapp.installUpdate().catch(() => {});
   };
 
   const handleDismiss = () => {
@@ -47,7 +51,7 @@ export function UpdateToast(): React.JSX.Element | null {
           </div>
           <div className="update-toast-text">
             <strong>v{updateInfo.latestVersion}</strong>
-            <span>{t('updateFound')}</span>
+            <span>{updateFailed ? t('updateInstallFailed') : t('updateFound')}</span>
           </div>
           <button
             type="button"
@@ -66,8 +70,19 @@ export function UpdateToast(): React.JSX.Element | null {
           >
             {t('later')}
           </button>
-          <button type="button" className="primary-link update-btn-install" onClick={handleInstall}>
-            {t('installUpdate')}
+          <button
+            type="button"
+            className="primary-link update-btn-install"
+            onClick={handleInstall}
+            disabled={downloading || installing}
+          >
+            {downloading
+              ? `${t('downloadingUpdate')} ${progress}%`
+              : installing
+                ? t('installingUpdate')
+                : updateFailed
+                  ? t('retryUpdate')
+                  : t('downloadAndInstall')}
           </button>
         </div>
       </div>

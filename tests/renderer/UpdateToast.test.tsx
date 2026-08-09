@@ -13,12 +13,12 @@ function renderToast(): void {
 }
 
 describe('UpdateToast', () => {
-  it('automatically checks for update on startup and displays toast when update is available', async () => {
+  it('automatically checks for updates and displays the available version', async () => {
     vi.mocked(window.authapp.checkUpdate).mockResolvedValueOnce({
       hasUpdate: true,
-      currentVersion: '0.1.0',
-      latestVersion: '0.2.1',
-      releaseUrl: 'https://github.com/ardakrt/authly/releases/tag/v0.2.1',
+      currentVersion: '0.3.5',
+      latestVersion: '0.3.6',
+      releaseUrl: 'https://github.com/ardakrt/authly/releases/tag/v0.3.6',
     });
 
     renderToast();
@@ -26,44 +26,50 @@ describe('UpdateToast', () => {
     expect(
       await screen.findByRole('dialog', { name: 'Güncelleme Bulundu' }, { timeout: 4000 }),
     ).toBeInTheDocument();
-    expect(screen.getByText('v0.2.1')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Yükle' })).toBeInTheDocument();
+    expect(screen.getByText('v0.3.6')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'İndir ve Kur' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Daha sonra' })).toBeInTheDocument();
   });
 
-  it('opens external URL and closes when install is clicked', async () => {
+  it('starts the in-app download and install flow', async () => {
     vi.mocked(window.authapp.checkUpdate).mockResolvedValueOnce({
       hasUpdate: true,
-      currentVersion: '0.1.0',
-      latestVersion: '0.2.1',
-      releaseUrl: 'https://github.com/ardakrt/authly/releases/tag/v0.2.1',
+      currentVersion: '0.3.5',
+      latestVersion: '0.3.6',
+      releaseUrl: 'https://github.com/ardakrt/authly/releases/tag/v0.3.6',
     });
 
     const user = userEvent.setup();
     renderToast();
 
-    const installBtn = await screen.findByRole('button', { name: 'Yükle' }, { timeout: 4000 });
-    await user.click(installBtn);
-
-    expect(window.authapp.openExternalUrl).toHaveBeenCalledWith(
-      'https://github.com/ardakrt/authly/releases/tag/v0.2.1',
+    const installButton = await screen.findByRole(
+      'button',
+      { name: 'İndir ve Kur' },
+      { timeout: 4000 },
     );
-    expect(screen.queryByRole('dialog', { name: 'Güncelleme Bulundu' })).not.toBeInTheDocument();
+    await user.click(installButton);
+
+    expect(window.authapp.installUpdate).toHaveBeenCalledOnce();
+    expect(screen.getByRole('dialog', { name: 'Güncelleme Bulundu' })).toBeInTheDocument();
   });
 
-  it('dismisses toast when later button is clicked', async () => {
+  it('dismisses the toast when later is clicked', async () => {
     vi.mocked(window.authapp.checkUpdate).mockResolvedValueOnce({
       hasUpdate: true,
-      currentVersion: '0.1.0',
-      latestVersion: '0.2.1',
-      releaseUrl: 'https://github.com/ardakrt/authly/releases/tag/v0.2.1',
+      currentVersion: '0.3.5',
+      latestVersion: '0.3.6',
+      releaseUrl: 'https://github.com/ardakrt/authly/releases/tag/v0.3.6',
     });
 
     const user = userEvent.setup();
     renderToast();
 
-    const laterBtn = await screen.findByRole('button', { name: 'Daha sonra' }, { timeout: 4000 });
-    await user.click(laterBtn);
+    const laterButton = await screen.findByRole(
+      'button',
+      { name: 'Daha sonra' },
+      { timeout: 4000 },
+    );
+    await user.click(laterButton);
 
     expect(screen.queryByRole('dialog', { name: 'Güncelleme Bulundu' })).not.toBeInTheDocument();
   });

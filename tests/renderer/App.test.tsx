@@ -69,6 +69,6 @@ describe('App shell and user interface', () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByText('v0.3.4 (Kurulu)')).toBeVisible();
+    expect(await screen.findByText('v0.3.5 (Kurulu)')).toBeVisible();
   });
 });

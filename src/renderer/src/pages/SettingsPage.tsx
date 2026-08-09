@@ -1,6 +1,5 @@
 import {
   Download,
-  ExternalLink,
   Globe,
   HardDrive,
   Monitor,
@@ -20,6 +19,7 @@ import type { ThemePreference } from '../app/themeContext';
 import type { Language } from '../utils/translations';
 import type { AppSettings } from '@shared/schemas/settings';
 import type { UpdateInfo } from '@shared/schemas/update';
+import { useUpdateState } from '../hooks/useUpdateState';
 
 const themes: ReadonlyArray<{
   value: ThemePreference;
@@ -55,6 +55,16 @@ export function SettingsPage(): React.JSX.Element {
   const [appVersion, setAppVersion] = useState<string | null>(null);
   const [updateCheckFailed, setUpdateCheckFailed] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const updateState = useUpdateState();
+  const updateAvailable =
+    updateInfo?.hasUpdate === true ||
+    updateState?.phase === 'available' ||
+    updateState?.phase === 'downloading' ||
+    updateState?.phase === 'downloaded';
+  const downloadingUpdate = updateState?.phase === 'downloading';
+  const installingUpdate = updateState?.phase === 'downloaded';
+  const updateFailed = updateState?.phase === 'error';
+  const updateProgress = Math.round(updateState?.progress ?? 0);
 
   useEffect(() => {
     void window.authapp
@@ -84,6 +94,15 @@ export function SettingsPage(): React.JSX.Element {
       setUpdateCheckFailed(true);
     } finally {
       setCheckingUpdate(false);
+    }
+  };
+
+  const handleInstallUpdate = async () => {
+    setUpdateCheckFailed(false);
+    try {
+      await window.authapp.installUpdate();
+    } catch {
+      setUpdateCheckFailed(true);
     }
   };
 
@@ -371,35 +390,53 @@ export function SettingsPage(): React.JSX.Element {
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <h2 className="setting-title">{t('updates')}</h2>
               <span style={{ fontSize: '0.78rem', color: '#34d399', fontWeight: 500 }}>
-                {updateInfo?.hasUpdate
-                  ? `v${updateInfo.latestVersion} (${t('newVersion')})`
-                  : `v${updateInfo?.currentVersion ?? appVersion ?? '—'} (${
-                      updateInfo?.error || updateCheckFailed
-                        ? t('updateCheckFailed')
-                        : updateInfo
-                          ? t('upToDate')
-                          : t('installed')
-                    })`}
+                {updateFailed
+                  ? `v${updateState.latestVersion ?? updateInfo?.latestVersion ?? appVersion ?? '—'} (${t(
+                      'updateInstallFailed',
+                    )})`
+                  : downloadingUpdate
+                    ? `v${updateState.latestVersion ?? updateInfo?.latestVersion ?? ''} (${t(
+                        'downloadingUpdate',
+                      )} ${updateProgress}%)`
+                    : installingUpdate
+                      ? `v${updateState.latestVersion ?? updateInfo?.latestVersion ?? ''} (${t(
+                          'installingUpdate',
+                        )})`
+                      : updateAvailable
+                        ? `v${updateState?.latestVersion ?? updateInfo?.latestVersion ?? ''} (${t(
+                            'newVersion',
+                          )})`
+                        : `v${updateInfo?.currentVersion ?? appVersion ?? '—'} (${
+                            updateInfo?.error || updateCheckFailed
+                              ? t('updateCheckFailed')
+                              : updateInfo
+                                ? t('upToDate')
+                                : t('installed')
+                          })`}
               </span>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            {updateInfo?.hasUpdate && updateInfo.releaseUrl && (
-              <button
-                type="button"
-                className="primary-link"
-                onClick={() => void window.authapp.openExternalUrl(updateInfo.releaseUrl!)}
-              >
-                <ExternalLink size={14} />
-              </button>
-            )}
             <button
               type="button"
-              className="glass-pill-btn secondary-link"
-              disabled={checkingUpdate}
-              onClick={() => void handleCheckUpdate()}
+              className={updateAvailable ? 'primary-link' : 'glass-pill-btn secondary-link'}
+              disabled={checkingUpdate || downloadingUpdate || installingUpdate}
+              onClick={() => void (updateAvailable ? handleInstallUpdate() : handleCheckUpdate())}
             >
-              <span>{checkingUpdate ? t('checking') : t('checkUpdateBtn')}</span>
+              {updateAvailable && <Download size={14} />}
+              <span>
+                {checkingUpdate
+                  ? t('checking')
+                  : downloadingUpdate
+                    ? `${t('downloadingUpdate')} ${updateProgress}%`
+                    : installingUpdate
+                      ? t('installingUpdate')
+                      : updateAvailable
+                        ? updateFailed
+                          ? t('retryUpdate')
+                          : t('downloadAndInstall')
+                        : t('checkUpdateBtn')}
+              </span>
             </button>
           </div>
         </section>
