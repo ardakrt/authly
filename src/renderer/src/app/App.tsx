@@ -17,10 +17,6 @@ export function App(): React.JSX.Element {
   return (
     <div className="app-wrapper app-shell">
       <LockScreenOverlay />
-      {/* Background Ambient Glows & Noise Texture */}
-      <div className="bg-glow-one" aria-hidden="true" />
-      <div className="bg-glow-two" aria-hidden="true" />
-      <div className="grain-overlay" aria-hidden="true" />
 
       <AppHeader onOpenSearch={openSearch} />
 
