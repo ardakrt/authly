@@ -70,7 +70,6 @@ export function HomePage(): React.JSX.Element {
     };
   }, [refresh]);
 
-  // Close dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -148,128 +147,130 @@ export function HomePage(): React.JSX.Element {
   }
 
   return (
-    <section className="workspace" aria-labelledby="accounts-title">
-      <PageHeading
-        title={accounts.length ? t('codesTitle') : t('codesTitleEmpty')}
-        description={t('codesSubtitle')}
-        action={
-          <Link className="primary-link primary-link--large" to="/add">
-            <Plus size={18} />
-            <span>{t('addAccountBtn')}</span>
-          </Link>
-        }
-      />
-
-      {error ? (
-        <div className="error-banner" role="alert">
-          Kodlar okunamadı.
-        </div>
-      ) : null}
-
-      <div className="account-surface-glass" id="accounts-title">
-        {loading ? (
-          <div className="loading-state">
-            <span />
-            <span />
-            <span />
-          </div>
-        ) : accounts.length === 0 ? (
-          <div className="empty-state liquid-glass-card">
-            <div className="empty-state__icon liquid-glass-pill">
-              <KeyRound size={28} />
-            </div>
-            <h2>{t('emptyTitle')}</h2>
-            <p>{t('emptyDesc')}</p>
-            <Link className="primary-link" to="/add">
+    <>
+      <section className="workspace" aria-labelledby="accounts-title">
+        <PageHeading
+          title={accounts.length ? t('codesTitle') : t('codesTitleEmpty')}
+          description={t('codesSubtitle')}
+          action={
+            <Link className="primary-link primary-link--large" to="/add">
               <Plus size={18} />
-              <span>{t('addFirstAccount')}</span>
+              <span>{t('addAccountBtn')}</span>
             </Link>
-          </div>
-        ) : (
-          <div className="account-grid">
-            {accounts.map((account) => {
-              const value = codes.find((item) => item.accountId === account.id);
-              const periodMs = (value?.period ?? 30) * 1000;
-              const msRemaining = periodMs - (now % periodMs);
-              const progress = (msRemaining / periodMs) * 100;
-              const secondsLeft = Math.ceil(msRemaining / 1000);
-              const isCopied = copiedAccountId === account.id;
-              const isMenuOpen = activeMenuAccountId === account.id;
+          }
+        />
 
-              return (
-                <article className="account-card liquid-glass-card" key={account.id}>
-                  <div className="account-card__top">
-                    <span className="service-avatar liquid-glass-pill">
-                      {account.issuer.slice(0, 2).toUpperCase()}
-                    </span>
-                    <div className="account-meta">
-                      <h2>{account.issuer}</h2>
-                      <p>{account.accountName}</p>
+        {error ? (
+          <div className="error-banner" role="alert">
+            Kodlar okunamadı.
+          </div>
+        ) : null}
+
+        <div className="account-surface-glass" id="accounts-title">
+          {loading ? (
+            <div className="loading-state">
+              <span />
+              <span />
+              <span />
+            </div>
+          ) : accounts.length === 0 ? (
+            <div className="empty-state liquid-glass-card">
+              <div className="empty-state__icon liquid-glass-pill">
+                <KeyRound size={28} />
+              </div>
+              <h2>{t('emptyTitle')}</h2>
+              <p>{t('emptyDesc')}</p>
+              <Link className="primary-link" to="/add">
+                <Plus size={18} />
+                <span>{t('addFirstAccount')}</span>
+              </Link>
+            </div>
+          ) : (
+            <div className="account-grid">
+              {accounts.map((account) => {
+                const value = codes.find((item) => item.accountId === account.id);
+                const periodMs = (value?.period ?? 30) * 1000;
+                const msRemaining = periodMs - (now % periodMs);
+                const progress = (msRemaining / periodMs) * 100;
+                const secondsLeft = Math.ceil(msRemaining / 1000);
+                const isCopied = copiedAccountId === account.id;
+                const isMenuOpen = activeMenuAccountId === account.id;
+
+                return (
+                  <article className="account-card liquid-glass-card" key={account.id}>
+                    <div className="account-card__top">
+                      <span className="service-avatar liquid-glass-pill">
+                        {account.issuer.slice(0, 2).toUpperCase()}
+                      </span>
+                      <div className="account-meta">
+                        <h2>{account.issuer}</h2>
+                        <p>{account.accountName}</p>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="icon-button liquid-glass-pill"
+                        aria-label={t('optionsMenu')}
+                        onClick={() => setActiveMenuAccountId(isMenuOpen ? null : account.id)}
+                      >
+                        <MoreVertical size={16} />
+                      </button>
+
+                      {isMenuOpen && (
+                        <div className="account-card-dropdown" ref={dropdownRef}>
+                          <button
+                            type="button"
+                            className="dropdown-item"
+                            onClick={() => handleOpenEdit(account)}
+                          >
+                            <Pencil size={14} />
+                            <span>{t('editAccount')}</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="dropdown-item dropdown-item--destructive"
+                            onClick={() => handleOpenDelete(account)}
+                          >
+                            <Trash2 size={14} />
+                            <span>{t('deleteAccountBtn')}</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
 
-                    <button
-                      type="button"
-                      className="icon-button liquid-glass-pill"
-                      aria-label={t('optionsMenu')}
-                      onClick={() => setActiveMenuAccountId(isMenuOpen ? null : account.id)}
-                    >
-                      <MoreVertical size={16} />
-                    </button>
+                    <div className="otp-row">
+                      <strong className="otp-code">
+                        {value ? value.code.replace(/(.{3})/g, '$1 ').trim() : '------'}
+                      </strong>
+                      <button
+                        className={`copy-button liquid-glass-pill ${isCopied ? 'is-copied' : ''}`}
+                        onClick={() => void handleCopy(account.id)}
+                      >
+                        {isCopied ? (
+                          <>
+                            <Check size={15} /> {t('copied')}
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={15} /> {t('copy')}
+                          </>
+                        )}
+                      </button>
+                    </div>
 
-                    {isMenuOpen && (
-                      <div className="account-card-dropdown" ref={dropdownRef}>
-                        <button
-                          type="button"
-                          className="dropdown-item"
-                          onClick={() => handleOpenEdit(account)}
-                        >
-                          <Pencil size={14} />
-                          <span>{t('editAccount')}</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="dropdown-item dropdown-item--destructive"
-                          onClick={() => handleOpenDelete(account)}
-                        >
-                          <Trash2 size={14} />
-                          <span>{t('deleteAccountBtn')}</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="otp-row">
-                    <strong className="otp-code">
-                      {value ? value.code.replace(/(.{3})/g, '$1 ').trim() : '------'}
-                    </strong>
-                    <button
-                      className={`copy-button liquid-glass-pill ${isCopied ? 'is-copied' : ''}`}
-                      onClick={() => void handleCopy(account.id)}
-                    >
-                      {isCopied ? (
-                        <>
-                          <Check size={15} /> {t('copied')}
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={15} /> {t('copy')}
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  <div className="countdown">
-                    <span style={{ width: `${progress}%` }} />
-                    <small>
-                      {secondsLeft} {t('secLeft')}
-                    </small>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                    <div className="countdown">
+                      <span style={{ width: `${progress}%` }} />
+                      <small>
+                        {secondsLeft} {t('secLeft')}
+                      </small>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
 
       {deletingAccount && (
         <div className="custom-modal-overlay" role="dialog" aria-modal="true">
@@ -362,6 +363,6 @@ export function HomePage(): React.JSX.Element {
           </form>
         </div>
       )}
-    </section>
+    </>
   );
 }

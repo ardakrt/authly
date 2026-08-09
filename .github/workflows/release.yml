@@ -23,15 +23,9 @@ jobs:
         run: npm ci
 
       - name: Verify project
-        run: npm run verify
+        run: npm run format:check && npm run lint && npm run test && npm run build
 
-      - name: Build Windows Executable
-        run: npx electron-builder --win nsis --x64
-
-      - name: Create GitHub Release & Upload Installer
-        uses: softprops/action-gh-release@v2
-        with:
-          files: dist/*.exe
-          generate_release_notes: true
+      - name: Build Windows Executable and Publish Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --win nsis --x64 --publish always
