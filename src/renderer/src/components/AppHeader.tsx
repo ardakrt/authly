@@ -52,8 +52,10 @@ export function AppHeader({ onOpenSearch }: { onOpenSearch: () => void }): React
             onClick={onOpenSearch}
             aria-label={t('navSearch')}
           >
-            <Search size={14} aria-hidden="true" />
-            <span className="search-trigger__label">{t('navSearch')}</span>
+            <div className="search-trigger__left">
+              <Search size={14} aria-hidden="true" />
+              <span className="search-trigger__label">{t('navSearch')}</span>
+            </div>
             <kbd>{t('navSearchKbd')}</kbd>
           </button>
 

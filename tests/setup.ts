@@ -65,5 +65,11 @@ Object.defineProperty(window, 'authapp', {
     setPin: vi.fn().mockResolvedValue(undefined),
     removePin: vi.fn().mockResolvedValue(undefined),
     lockApp: vi.fn().mockResolvedValue(undefined),
+    checkUpdate: vi.fn().mockResolvedValue({
+      hasUpdate: false,
+      currentVersion: '0.1.0',
+      latestVersion: '0.1.0',
+    }),
+    openExternalUrl: vi.fn().mockResolvedValue(undefined),
   },
 });

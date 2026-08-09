@@ -1,8 +1,12 @@
 {
   "name": "authapp",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "private": true,
   "description": "Windows-first, offline desktop authenticator",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ardakrt/authly.git"
+  },
   "main": "out/main/index.cjs",
   "type": "module",
   "scripts": {
@@ -68,6 +72,13 @@
   "build": {
     "appId": "dev.authapp.desktop",
     "productName": "Authly",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "ardakrt",
+        "repo": "authly"
+      }
+    ],
     "asar": true,
     "directories": {
       "buildResources": "resources",

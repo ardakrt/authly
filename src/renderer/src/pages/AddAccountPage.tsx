@@ -228,7 +228,6 @@ export function AddAccountPage(): React.JSX.Element {
         }
       />
 
-      {/* Mode Selector Tabs */}
       <div className="add-mode-tabs" role="tablist" aria-label="Hesap ekleme yöntemi">
         <button
           type="button"
@@ -263,7 +262,6 @@ export function AddAccountPage(): React.JSX.Element {
         </button>
       </div>
 
-      {/* Status Messages */}
       {error ? (
         <div className="error-banner" role="alert">
           {error}
@@ -277,7 +275,6 @@ export function AddAccountPage(): React.JSX.Element {
         </div>
       ) : null}
 
-      {/* Mode 1: QR Upload or Paste */}
       {mode === 'upload' && !scannedPreview && batchAccounts.length === 0 && (
         <div className="upload-container">
           <label className="drag-drop-zone">
@@ -303,12 +300,11 @@ export function AddAccountPage(): React.JSX.Element {
           >
             <Clipboard size={18} />
             <span>{t('pasteClipboard')}</span>
-            <kbd>Ctrl V</kbd>
+            <kbd>Ctrl+V</kbd>
           </button>
         </div>
       )}
 
-      {/* Batch Import Review View */}
       {batchAccounts.length > 1 && (
         <div className="account-form-card">
           <div className="form-card-header">
@@ -379,7 +375,6 @@ export function AddAccountPage(): React.JSX.Element {
         </div>
       )}
 
-      {/* Mode 2 or Single Scanned QR Preview Form */}
       {(mode === 'manual' || (scannedPreview && batchAccounts.length <= 1)) && (
         <form className="account-form-card" onSubmit={(e) => void submitSingleForm(e)}>
           <div className="form-card-header">
@@ -387,7 +382,6 @@ export function AddAccountPage(): React.JSX.Element {
             <p>Servis adını ve kullanıcı bilgilerinizi onaylayıp kaydedin.</p>
           </div>
 
-          {/* Quick Service Suggestions for manual mode */}
           {mode === 'manual' && (
             <div className="service-chips">
               <span className="chips-label">{t('popularServices')}</span>
@@ -442,7 +436,6 @@ export function AddAccountPage(): React.JSX.Element {
             </label>
           </div>
 
-          {/* Advanced Accordion */}
           <div className="advanced-accordion">
             <button
               type="button"

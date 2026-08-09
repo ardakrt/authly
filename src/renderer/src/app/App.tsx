@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppHeader } from '../components/AppHeader';
 import { SearchDialog } from '../components/SearchDialog';
 import { LockScreenOverlay } from '../components/LockScreenOverlay';
+import { UpdateToast } from '../components/UpdateToast';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { AddAccountPage } from '../pages/AddAccountPage';
 import { HomePage } from '../pages/HomePage';
@@ -18,6 +19,8 @@ export function App(): React.JSX.Element {
     <div className="app-wrapper app-shell">
       <LockScreenOverlay />
 
+      <div className="dark-horizon-glow" aria-hidden="true" />
+
       <AppHeader onOpenSearch={openSearch} />
 
       <main className="app-main" id="main-content">
@@ -30,6 +33,7 @@ export function App(): React.JSX.Element {
       </main>
 
       <SearchDialog open={searchOpen} onClose={closeSearch} />
+      <UpdateToast />
     </div>
   );
 }

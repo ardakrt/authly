@@ -155,7 +155,6 @@ export function SettingsPage(): React.JSX.Element {
       ) : null}
 
       <div className="settings-minimal-list">
-        {/* Appearance Row */}
         <section className="setting-row-minimal">
           <div className="setting-label-group">
             <div className="setting-icon-box">
@@ -179,7 +178,6 @@ export function SettingsPage(): React.JSX.Element {
           </div>
         </section>
 
-        {/* Language Row */}
         <section className="setting-row-minimal">
           <div className="setting-label-group">
             <div className="setting-icon-box">
@@ -202,7 +200,6 @@ export function SettingsPage(): React.JSX.Element {
           </div>
         </section>
 
-        {/* System Tray Row */}
         <section className="setting-row-minimal">
           <div className="setting-label-group">
             <div className="setting-icon-box">
@@ -220,7 +217,6 @@ export function SettingsPage(): React.JSX.Element {
           </button>
         </section>
 
-        {/* Encrypted Backup Row */}
         <section className="setting-row-minimal">
           <div className="setting-label-group">
             <div className="setting-icon-box">
@@ -256,7 +252,6 @@ export function SettingsPage(): React.JSX.Element {
           </div>
         </section>
 
-        {/* Export Form Popover Modal */}
         {showExportForm && (
           <form
             className="account-form-card"
@@ -312,7 +307,6 @@ export function SettingsPage(): React.JSX.Element {
           </form>
         )}
 
-        {/* Import Form Popover Modal */}
         {showImportForm && (
           <form
             className="account-form-card"
@@ -367,7 +361,6 @@ export function SettingsPage(): React.JSX.Element {
           </form>
         )}
 
-        {/* Updates Row */}
         <section className="setting-row-minimal">
           <div className="setting-label-group">
             <div className="setting-icon-box">
