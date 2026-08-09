@@ -1,4 +1,4 @@
-﻿# Authly
+# Authly
 
 Authly is a Windows-first, offline desktop authenticator built with Electron, React, TypeScript, Vite, SQLite, and DPAPI OS-level encryption. It provides a secure, lightweight alternative to cloud-connected authenticator apps, keeping all multi-factor authentication (2FA/TOTP) secrets strictly local on your device.
 
