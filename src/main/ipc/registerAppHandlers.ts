@@ -259,7 +259,7 @@ export function registerAppHandlers(
       const updateInfo = await updateService.checkForUpdates();
       return updateInfoSchema.parse(updateInfo);
     } catch {
-      throw new Error('G?ncelleme denetimi ger?ekle?tirilemedi.');
+      throw new Error('Güncelleme denetimi gerçekleştirilemedi.');
     }
   });
 
@@ -269,7 +269,7 @@ export function registerAppHandlers(
       const { url } = openExternalUrlRequestSchema.parse(rawRequest);
       await shell.openExternal(url);
     } catch {
-      throw new Error('Ba?lant? a??lamad?.');
+      throw new Error('Bağlantı açılamadı.');
     }
   });
 }

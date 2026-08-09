@@ -21,7 +21,7 @@ const themes: ReadonlyArray<{
   icon: typeof Monitor;
 }> = [
   { value: 'system', label: 'Sistem', icon: Monitor },
-  { value: 'light', label: 'A??k', icon: Sun },
+  { value: 'light', label: 'Açık', icon: Sun },
   { value: 'dark', label: 'Koyu', icon: Moon },
 ];
 
@@ -63,7 +63,7 @@ export function SettingsPage(): React.JSX.Element {
         hasUpdate: false,
         currentVersion: '0.1.0',
         latestVersion: '0.1.0',
-        error: 'G?ncelleme denetimi ger?ekle?tirilemedi.',
+        error: 'Güncelleme denetimi gerçekleştirilemedi.',
       });
     } finally {
       setCheckingUpdate(false);
@@ -73,7 +73,7 @@ export function SettingsPage(): React.JSX.Element {
   const handleExport = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!exportPassword || exportPassword.length < 4) {
-      setStatusMsg({ type: 'error', message: 'Yedek parolas? en az 4 karakter olmal?d?r.' });
+      setStatusMsg({ type: 'error', message: 'Yedek parolası en az 4 karakter olmalıdır.' });
       return;
     }
     setBusy(true);
@@ -83,7 +83,7 @@ export function SettingsPage(): React.JSX.Element {
       if (result.success) {
         setStatusMsg({
           type: 'success',
-          message: `${result.exportedCount} adet hesap ba?ar?yla ?ifreli yedek dosyas?na aktar?ld?.`,
+          message: `${result.exportedCount} adet hesap başarıyla şifreli yedek dosyasına aktarıldı.`,
         });
         setShowExportForm(false);
         setExportPassword('');
@@ -91,7 +91,7 @@ export function SettingsPage(): React.JSX.Element {
     } catch (err) {
       setStatusMsg({
         type: 'error',
-        message: err instanceof Error ? err.message : 'Yedekleme ba?ar?s?z.',
+        message: err instanceof Error ? err.message : 'Yedekleme başarısız.',
       });
     } finally {
       setBusy(false);
@@ -101,7 +101,7 @@ export function SettingsPage(): React.JSX.Element {
   const handleImport = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!importPassword) {
-      setStatusMsg({ type: 'error', message: 'L?tfen yedek parolas?n? girin.' });
+      setStatusMsg({ type: 'error', message: 'Lütfen yedek parolasını girin.' });
       return;
     }
     setBusy(true);
@@ -111,7 +111,7 @@ export function SettingsPage(): React.JSX.Element {
       if (result.success) {
         setStatusMsg({
           type: 'success',
-          message: `Yedekten ${result.importedCount} hesap ba?ar?yla i?e aktar?ld?. (${result.skippedCount} atland?)`,
+          message: `Yedekten ${result.importedCount} hesap başarıyla içe aktarıldı. (${result.skippedCount} atlandı)`,
         });
         setShowImportForm(false);
         setImportPassword('');
@@ -119,7 +119,7 @@ export function SettingsPage(): React.JSX.Element {
     } catch (err) {
       setStatusMsg({
         type: 'error',
-        message: err instanceof Error ? err.message : '??e aktarma ba?ar?s?z.',
+        message: err instanceof Error ? err.message : 'İçe aktarma başarısız.',
       });
     } finally {
       setBusy(false);
@@ -130,7 +130,7 @@ export function SettingsPage(): React.JSX.Element {
     <section className="workspace settings-page">
       <PageHeading
         title="Ayarlar"
-        description="Uygulama g?r?n?m?n? ki?iselle?tirin, verilerinizi yedekleyin ve g?ncellemeleri kontrol edin."
+        description="Uygulama görünümünü kişiselleştirin, verilerinizi yedekleyin ve güncellemeleri kontrol edin."
       />
 
       {statusMsg ? (
@@ -144,8 +144,8 @@ export function SettingsPage(): React.JSX.Element {
 
       <section className="settings-section" aria-labelledby="appearance-title">
         <div>
-          <h2 id="appearance-title">G?r?n?m ve Tema</h2>
-          <p>Uygulaman?z?n renk ve tema tercihini belirleyin.</p>
+          <h2 id="appearance-title">Görünüm ve Tema</h2>
+          <p>Uygulamanızın renk ve tema tercihini belirleyin.</p>
         </div>
         <div className="theme-options" role="group" aria-label="Tema">
           {themes.map(({ value, label, icon: Icon }) => (
@@ -165,14 +165,14 @@ export function SettingsPage(): React.JSX.Element {
 
       <section className="settings-section" aria-labelledby="tray-title">
         <div>
-          <h2 id="tray-title">Sistem Tepsisi ve Uygulama Davran???</h2>
-          <p>Kapatma butonuna bas?ld???nda uygulaman?n nas?l davranaca??n? ayarlay?n.</p>
+          <h2 id="tray-title">Sistem Tepsisi ve Uygulama Davranışı</h2>
+          <p>Kapatma butonuna basıldığında uygulamanın nasıl davranacağını ayarlayın.</p>
         </div>
         <div className="status-list">
           <div>
             <dt className="status-title">
               <HardDrive size={18} />
-              <span>Pencere Kapat?ld???nda Sistem Tepsisine K???lt</span>
+              <span>Pencere Kapatıldığında Sistem Tepsisine Küçült</span>
             </dt>
             <dd>
               <button
@@ -181,8 +181,8 @@ export function SettingsPage(): React.JSX.Element {
                 onClick={() => void toggleCloseToTray()}
               >
                 {settings?.closeToTray
-                  ? 'Etkin (Tepside ?al???r)'
-                  : 'Devre D??? (Uygulama Kapan?r)'}
+                  ? 'Etkin (Tepside Çalışır)'
+                  : 'Devre Dışı (Uygulama Kapanır)'}
               </button>
             </dd>
           </div>
@@ -191,10 +191,10 @@ export function SettingsPage(): React.JSX.Element {
 
       <section className="settings-section" aria-labelledby="backup-title">
         <div>
-          <h2 id="backup-title">?ifreli Yedekleme ve Kurtarma</h2>
+          <h2 id="backup-title">Şifreli Yedekleme ve Kurtarma</h2>
           <p>
-            T?m hesaplar?n?z? PBKDF2 + AES-256-GCM ile parola korumal? dosyaya aktar?n veya geri
-            y?kleyin.
+            Tüm hesaplarınızı PBKDF2 + AES-256-GCM ile parola korumalı dosyaya aktarın veya geri
+            yükleyin.
           </p>
         </div>
         <div className="form-actions-row" style={{ marginTop: '0.5rem' }}>
@@ -208,7 +208,7 @@ export function SettingsPage(): React.JSX.Element {
             }}
           >
             <Download size={18} />
-            <span>?ifreli Yedek ?ndir (D??a Aktar)</span>
+            <span>Şifreli Yedek İndir (Dışa Aktar)</span>
           </button>
 
           <button
@@ -221,7 +221,7 @@ export function SettingsPage(): React.JSX.Element {
             }}
           >
             <Upload size={18} />
-            <span>Yedek Dosyas? Y?kle (??e Aktar)</span>
+            <span>Yedek Dosyası Yükle (İçe Aktar)</span>
           </button>
         </div>
 
@@ -232,17 +232,17 @@ export function SettingsPage(): React.JSX.Element {
             style={{ marginTop: '1rem' }}
           >
             <div className="form-card-header">
-              <h3>?ifreli D??a Aktarma Parolas?</h3>
-              <p>Yedek dosyas?n? korumak i?in g??l? bir parola belirleyin.</p>
+              <h3>Şifreli Dışa Aktarma Parolası</h3>
+              <p>Yedek dosyasını korumak için güçlü bir parola belirleyin.</p>
             </div>
             <div className="form-grid">
               <label className="form-full-width">
-                <span>Yedek Parolas? (En az 4 karakter)</span>
+                <span>Yedek Parolası (En az 4 karakter)</span>
                 <input
                   type="password"
                   required
                   minLength={4}
-                  placeholder="????????"
+                  placeholder="••••••••"
                   value={exportPassword}
                   onChange={(e) => setExportPassword(e.target.value)}
                 />
@@ -254,11 +254,11 @@ export function SettingsPage(): React.JSX.Element {
                 className="secondary-link"
                 onClick={() => setShowExportForm(false)}
               >
-                ?ptal
+                İptal
               </button>
               <button type="submit" className="primary-link form-submit-btn" disabled={busy}>
                 <Download size={18} />
-                <span>{busy ? 'D??a Aktar?l?yor...' : 'Yede?i Olu?tur ve Kaydet'}</span>
+                <span>{busy ? 'Dışa Aktarılıyor...' : 'Yedeği Oluştur ve Kaydet'}</span>
               </button>
             </div>
           </form>
@@ -271,16 +271,16 @@ export function SettingsPage(): React.JSX.Element {
             style={{ marginTop: '1rem' }}
           >
             <div className="form-card-header">
-              <h3>Yedek Dosyas? Parolas?</h3>
-              <p>Yedek olu?turulurken kullan?lan parolay? girin.</p>
+              <h3>Yedek Dosyası Parolası</h3>
+              <p>Yedek oluşturulurken kullanılan parolayı girin.</p>
             </div>
             <div className="form-grid">
               <label className="form-full-width">
-                <span>Yedek Parolas?</span>
+                <span>Yedek Parolası</span>
                 <input
                   type="password"
                   required
-                  placeholder="????????"
+                  placeholder="••••••••"
                   value={importPassword}
                   onChange={(e) => setImportPassword(e.target.value)}
                 />
@@ -292,11 +292,11 @@ export function SettingsPage(): React.JSX.Element {
                 className="secondary-link"
                 onClick={() => setShowImportForm(false)}
               >
-                ?ptal
+                İptal
               </button>
               <button type="submit" className="primary-link form-submit-btn" disabled={busy}>
                 <Upload size={18} />
-                <span>{busy ? '?ifre ??z?l?yor...' : 'Dosyay? Se? ve ??e Aktar'}</span>
+                <span>{busy ? 'Şifre Çözülüyor...' : 'Dosyayı Seç ve İçe Aktar'}</span>
               </button>
             </div>
           </form>
@@ -305,14 +305,14 @@ export function SettingsPage(): React.JSX.Element {
 
       <section className="settings-section" aria-labelledby="update-title">
         <div>
-          <h2 id="update-title">G?ncellemeler</h2>
-          <p>GitHub ?zerinden uygulaman?n en g?ncel s?r?m?n? kontrol edin.</p>
+          <h2 id="update-title">Güncellemeler</h2>
+          <p>GitHub üzerinden uygulamanın en güncel sürümünü kontrol edin.</p>
         </div>
         <div className="status-list">
           <div>
             <dt className="status-title">
               <RefreshCw size={18} />
-              <span>GitHub S?r?m Denetimi</span>
+              <span>GitHub Sürüm Denetimi</span>
             </dt>
             <dd style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
               <button
@@ -322,7 +322,7 @@ export function SettingsPage(): React.JSX.Element {
                 onClick={() => void handleCheckUpdate()}
               >
                 <RefreshCw size={16} className={checkingUpdate ? 'animate-spin' : undefined} />
-                <span>{checkingUpdate ? 'Denetleniyor...' : 'G?ncellemeleri Denetle'}</span>
+                <span>{checkingUpdate ? 'Denetleniyor...' : 'Güncellemeleri Denetle'}</span>
               </button>
               {updateInfo?.hasUpdate && updateInfo.releaseUrl && (
                 <button
@@ -331,7 +331,7 @@ export function SettingsPage(): React.JSX.Element {
                   onClick={() => void window.authapp.openExternalUrl(updateInfo.releaseUrl!)}
                 >
                   <ExternalLink size={16} />
-                  <span>S?r?m? ?ncele (v${updateInfo.latestVersion})</span>
+                  <span>Sürümü İncele (v{updateInfo.latestVersion})</span>
                 </button>
               )}
             </dd>
@@ -351,10 +351,10 @@ export function SettingsPage(): React.JSX.Element {
             role="status"
           >
             {updateInfo.hasUpdate
-              ? `Yeni bir s?r?m mevcut: v${updateInfo.latestVersion} (Mevcut: v${updateInfo.currentVersion})`
+              ? `Yeni bir sürüm mevcut: v${updateInfo.latestVersion} (Mevcut: v${updateInfo.currentVersion})`
               : updateInfo.error
                 ? updateInfo.error
-                : `Uygulaman?z g?ncel (v${updateInfo.currentVersion}).`}
+                : `Uygulamanız güncel (v${updateInfo.currentVersion}).`}
           </div>
         )}
       </section>
