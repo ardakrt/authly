@@ -4,7 +4,7 @@ import type { UpdateInfo } from '@shared/schemas/update';
 export class UpdateService {
   constructor(
     private readonly repoOwner: string = 'ardakrt',
-    private readonly repoName: string = 'authapp',
+    private readonly repoName: string = 'authly',
   ) {}
 
   async checkForUpdates(): Promise<UpdateInfo> {

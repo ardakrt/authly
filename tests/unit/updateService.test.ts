@@ -12,7 +12,7 @@ describe('UpdateService', () => {
   let service: UpdateService;
 
   beforeEach(() => {
-    service = new UpdateService('ardakrt', 'authapp');
+    service = new UpdateService('ardakrt', 'authly');
     vi.restoreAllMocks();
     (app.getVersion as ReturnType<typeof vi.fn>).mockReturnValue('0.1.0');
   });
@@ -59,7 +59,7 @@ describe('UpdateService', () => {
           status: 200,
           json: async () => ({
             tag_name: 'v0.2.0',
-            html_url: 'https://github.com/ardakrt/authapp/releases/tag/v0.2.0',
+            html_url: 'https://github.com/ardakrt/authly/releases/tag/v0.2.0',
             body: 'Release notes v0.2.0',
           }),
         }),
@@ -68,7 +68,7 @@ describe('UpdateService', () => {
       const result = await service.checkForUpdates();
       expect(result.hasUpdate).toBe(true);
       expect(result.latestVersion).toBe('0.2.0');
-      expect(result.releaseUrl).toBe('https://github.com/ardakrt/authapp/releases/tag/v0.2.0');
+      expect(result.releaseUrl).toBe('https://github.com/ardakrt/authly/releases/tag/v0.2.0');
     });
 
     it('handles network errors gracefully', async () => {
