@@ -32,6 +32,7 @@ describe('LockService', () => {
 
     expect(store.has('pinHash')).toBe(true);
     expect(store.has('pinSalt')).toBe(true);
+    expect(store.get('pinIterations')).toBe('600000');
     service.lockApp();
     expect(service.getStatus().isLocked).toBe(true);
     expect(() => service.assertNotLocked()).toThrow('Uygulama kilitli');
@@ -40,5 +41,32 @@ describe('LockService', () => {
     expect(service.verifyPin('1234')).toBe(true);
     expect(service.getStatus().isLocked).toBe(false);
     expect(() => service.assertNotLocked()).not.toThrow();
+  });
+
+  it('persists failed attempts and rate-limits PIN verification', () => {
+    const store = new Map<string, string>();
+    const mockRepo = {
+      get: (key: string) => store.get(key) ?? null,
+      set: (key: string, val: string) => store.set(key, val),
+      delete: (key: string) => store.delete(key),
+    } as unknown as SettingsRepository;
+    let now = 1_000;
+
+    const service = new LockService(mockRepo, () => now);
+    service.setPin('1234');
+    service.lockApp();
+
+    for (let attempt = 1; attempt < 5; attempt++) {
+      expect(() => service.verifyPin('9999')).toThrow('PIN hatalı');
+    }
+    expect(() => service.verifyPin('9999')).toThrow('Çok fazla hatalı deneme');
+    expect(store.get('pinFailedAttempts')).toBe('5');
+    expect(Number(store.get('pinLockoutUntil'))).toBeGreaterThan(now);
+    expect(() => service.verifyPin('1234')).toThrow('Çok fazla hatalı deneme');
+
+    now += 30_001;
+    expect(service.verifyPin('1234')).toBe(true);
+    expect(store.has('pinFailedAttempts')).toBe(false);
+    expect(store.has('pinLockoutUntil')).toBe(false);
   });
 });

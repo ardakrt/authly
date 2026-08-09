@@ -16,6 +16,7 @@ vi.mock('node:fs', async (importOriginal) => {
   return {
     ...actual,
     readFileSync: vi.fn(),
+    statSync: vi.fn(),
     writeFileSync: vi.fn(),
   };
 });
@@ -61,6 +62,8 @@ describe('BackupService', () => {
     expect(savedContent).toContain('authapp-backup-v1');
     expect(savedContent).toContain('pbkdf2');
     expect(savedContent).toContain('aes-256-gcm');
+    expect(JSON.parse(savedContent).kdf.iterations).toBe(600_000);
+    expect(savedContent).not.toContain('JBSWY3DPEHPK3PXP');
   });
 
   it('fails import when password is incorrect', async () => {
@@ -78,7 +81,7 @@ describe('BackupService', () => {
       format: 'authapp-backup-v1',
       kdf: {
         algorithm: 'pbkdf2',
-        iterations: 1000,
+        iterations: 100_000,
         hash: 'sha256',
         salt: '00112233445566778899aabbccddeeff',
       },
@@ -90,9 +93,30 @@ describe('BackupService', () => {
       encryptedData: 'deadbeef',
     };
 
-    vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(sampleEnvelope));
+    const serializedEnvelope = JSON.stringify(sampleEnvelope);
+    vi.mocked(fs.statSync).mockReturnValue({
+      size: Buffer.byteLength(serializedEnvelope),
+    } as fs.Stats);
+    vi.mocked(fs.readFileSync).mockReturnValue(serializedEnvelope);
 
     const service = new BackupService(mockAccountService);
     await expect(service.importBackup('wrong-pass')).rejects.toThrow('Parola hatalı');
+  });
+
+  it('rejects oversized backup files before reading them', async () => {
+    const mockAccountService = {
+      list: vi.fn().mockReturnValue([]),
+      create: vi.fn(),
+    } as unknown as AccountService;
+
+    vi.mocked(dialog.showOpenDialog).mockResolvedValueOnce({
+      canceled: false,
+      filePaths: ['C:/test/oversized.authapp'],
+    });
+    vi.mocked(fs.statSync).mockReturnValue({ size: 20 * 1024 * 1024 + 1 } as fs.Stats);
+
+    const service = new BackupService(mockAccountService);
+    await expect(service.importBackup('strong-password')).rejects.toThrow('boyut sınırını');
+    expect(fs.readFileSync).not.toHaveBeenCalledWith('C:/test/oversized.authapp', 'utf8');
   });
 });

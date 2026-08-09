@@ -5,6 +5,8 @@ import type { AccountService } from './AccountService';
 import {
   backupFileEnvelopeSchema,
   backupPayloadSchema,
+  CURRENT_BACKUP_KDF_ITERATIONS,
+  MAX_BACKUP_FILE_BYTES,
   type ExportBackupResult,
   type ImportBackupResult,
 } from '@shared/schemas/backup';
@@ -48,7 +50,7 @@ export class BackupService {
 
     const salt = randomBytes(16);
     const iv = randomBytes(12);
-    const iterations = 100_000;
+    const iterations = CURRENT_BACKUP_KDF_ITERATIONS;
     const key = pbkdf2Sync(password, salt, iterations, 32, 'sha256');
 
     const cipher = createCipheriv('aes-256-gcm', key, iv);
@@ -95,7 +97,14 @@ export class BackupService {
     }
 
     const filePath = openDialogResult.filePaths[0];
+    const fileSize = fs.statSync(filePath).size;
+    if (fileSize > MAX_BACKUP_FILE_BYTES) {
+      throw new Error('Yedek dosyası izin verilen boyut sınırını aşıyor.');
+    }
     const fileContent = fs.readFileSync(filePath, 'utf8');
+    if (Buffer.byteLength(fileContent, 'utf8') > MAX_BACKUP_FILE_BYTES) {
+      throw new Error('Yedek dosyası izin verilen boyut sınırını aşıyor.');
+    }
     let envelopeRaw: unknown;
     try {
       envelopeRaw = JSON.parse(fileContent);

@@ -59,4 +59,16 @@ describe('App shell and user interface', () => {
     expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
     expect(screen.getByRole('button', { name: 'Koyu' })).toHaveAttribute('aria-pressed', 'true');
   });
+
+  it('shows the installed package version in settings', async () => {
+    render(
+      <MemoryRouter initialEntries={['/settings']}>
+        <ThemeProvider>
+          <App />
+        </ThemeProvider>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText('v0.3.4 (Kurulu)')).toBeVisible();
+  });
 });

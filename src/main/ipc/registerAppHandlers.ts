@@ -146,6 +146,7 @@ export function registerAppHandlers(
   ipcMain.handle(IPC_CHANNELS.copyTotp, async (event, rawRequest: unknown) => {
     try {
       assertTrustedSender(event, developmentUrl);
+      lockService.assertNotLocked();
       const { accountId } = copyTotpRequestSchema.parse(rawRequest);
       const value = (await accountService.getTotpCodes()).find(
         (item) => item.accountId === accountId,
@@ -163,6 +164,7 @@ export function registerAppHandlers(
   ipcMain.handle(IPC_CHANNELS.exportBackup, async (event, rawRequest: unknown) => {
     try {
       assertTrustedSender(event, developmentUrl);
+      lockService.assertNotLocked();
       const { password } = exportBackupRequestSchema.parse(rawRequest);
       return exportBackupResultSchema.parse(await backupService.exportBackup(password));
     } catch (err) {
@@ -175,6 +177,7 @@ export function registerAppHandlers(
   ipcMain.handle(IPC_CHANNELS.importBackup, async (event, rawRequest: unknown) => {
     try {
       assertTrustedSender(event, developmentUrl);
+      lockService.assertNotLocked();
       const { password } = importBackupRequestSchema.parse(rawRequest);
       return importBackupResultSchema.parse(await backupService.importBackup(password));
     } catch (err) {

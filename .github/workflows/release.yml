@@ -12,9 +12,9 @@ jobs:
   release:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
@@ -28,10 +28,23 @@ jobs:
       - name: Build Windows Executable
         run: npx electron-builder --win nsis --x64 --publish never
 
-      - name: Create GitHub Release & Upload Installer
-        uses: softprops/action-gh-release@v2
-        with:
-          files: dist/*.exe
-          generate_release_notes: true
+      - name: Generate SHA-256 checksum
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem -LiteralPath dist -Filter '*.exe' | Select-Object -First 1
+          if (-not $installer) { throw 'Windows installer was not created.' }
+          $hash = (Get-FileHash -LiteralPath $installer.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $($installer.Name)" | Set-Content -LiteralPath dist/SHA256SUMS.txt -Encoding ascii
+
+      - name: Create GitHub Release and upload verified artifacts
+        shell: pwsh
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $installer = Get-ChildItem -LiteralPath dist -Filter '*.exe' | Select-Object -First 1
+          gh release create "${{ github.ref_name }}" `
+            $installer.FullName `
+            dist/SHA256SUMS.txt `
+            --verify-tag `
+            --title "${{ github.ref_name }}" `
+            --generate-notes

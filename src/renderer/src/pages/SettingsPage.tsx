@@ -52,12 +52,18 @@ export function SettingsPage(): React.JSX.Element {
   );
   const [busy, setBusy] = useState(false);
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
+  const [appVersion, setAppVersion] = useState<string | null>(null);
+  const [updateCheckFailed, setUpdateCheckFailed] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
 
   useEffect(() => {
     void window.authapp
       .getSettings()
       .then(setSettings)
+      .catch(() => {});
+    void window.authapp
+      .getRuntimeInfo()
+      .then((info) => setAppVersion(info.appVersion))
       .catch(() => {});
   }, []);
 
@@ -70,16 +76,12 @@ export function SettingsPage(): React.JSX.Element {
 
   const handleCheckUpdate = async () => {
     setCheckingUpdate(true);
+    setUpdateCheckFailed(false);
     try {
       const info = await window.authapp.checkUpdate();
       setUpdateInfo(info);
     } catch {
-      setUpdateInfo({
-        hasUpdate: false,
-        currentVersion: '0.1.0',
-        latestVersion: '0.1.0',
-        error: 'Güncelleme denetimi gerçekleştirilemedi.',
-      });
+      setUpdateCheckFailed(true);
     } finally {
       setCheckingUpdate(false);
     }
@@ -87,8 +89,8 @@ export function SettingsPage(): React.JSX.Element {
 
   const handleExport = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!exportPassword || exportPassword.length < 4) {
-      setStatusMsg({ type: 'error', message: 'Yedek parolası en az 4 karakter olmalıdır.' });
+    if (!exportPassword || exportPassword.length < 12) {
+      setStatusMsg({ type: 'error', message: 'Yedek parolası en az 12 karakter olmalıdır.' });
       return;
     }
     setBusy(true);
@@ -371,7 +373,13 @@ export function SettingsPage(): React.JSX.Element {
               <span style={{ fontSize: '0.78rem', color: '#34d399', fontWeight: 500 }}>
                 {updateInfo?.hasUpdate
                   ? `v${updateInfo.latestVersion} (${t('newVersion')})`
-                  : t('upToDate')}
+                  : `v${updateInfo?.currentVersion ?? appVersion ?? '—'} (${
+                      updateInfo?.error || updateCheckFailed
+                        ? t('updateCheckFailed')
+                        : updateInfo
+                          ? t('upToDate')
+                          : t('installed')
+                    })`}
               </span>
             </div>
           </div>
