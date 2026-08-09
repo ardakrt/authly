@@ -18,3 +18,9 @@ temp_icon_pack/
 *.db-journal
 *.db-wal
 *.db-shm
+
+.codex/
+.continue/
+.cursor/
+.hallmark/
+docs/
