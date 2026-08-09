@@ -1,0 +1,107 @@
+:root {
+  color-scheme: dark;
+
+  --font-display: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --color-paper: #07070a;
+  --color-paper-2: rgba(255, 255, 255, 0.035);
+  --color-paper-3: rgba(255, 255, 255, 0.07);
+  --color-surface-raised: rgba(255, 255, 255, 0.05);
+  --color-rule: rgba(255, 255, 255, 0.08);
+  --color-rule-strong: rgba(255, 255, 255, 0.16);
+  --color-muted: rgba(255, 255, 255, 0.55);
+  --color-ink-2: rgba(255, 255, 255, 0.85);
+  --color-ink: #ffffff;
+  --color-accent: #ffffff;
+  --color-accent-hover: #e5e5e5;
+  --color-accent-ink: #07070a;
+  --color-focus: rgba(255, 255, 255, 0.5);
+  --color-error: #ffffff;
+  --color-error-surface: rgba(255, 255, 255, 0.08);
+  --color-success: #ffffff;
+  --color-overlay: rgba(0, 0, 0, 0.75);
+  --color-shadow: rgba(0, 0, 0, 0.5);
+
+  --space-3xs: 0.125rem;
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.5rem;
+  --space-2xl: 4rem;
+  --space-3xl: 6rem;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-md: 1.25rem;
+  --text-lg: 1.5625rem;
+  --text-xl: 1.953rem;
+  --text-2xl: 2.441rem;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms;
+  --dur-short: 220ms;
+  --dur-long: 420ms;
+
+  --rule-thin: 1px;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 1rem;
+
+  --z-base: 1;
+  --z-sticky: 200;
+  --z-modal: 400;
+  --z-toast: 500;
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+
+  --color-paper: #f8f9fa;
+  --color-paper-2: rgba(0, 0, 0, 0.03);
+  --color-paper-3: rgba(0, 0, 0, 0.06);
+  --color-surface-raised: #ffffff;
+  --color-rule: rgba(0, 0, 0, 0.08);
+  --color-rule-strong: rgba(0, 0, 0, 0.16);
+  --color-muted: #64748b;
+  --color-ink-2: #334155;
+  --color-ink: #0f172a;
+  --color-accent: #0f172a;
+  --color-accent-hover: #1e293b;
+  --color-accent-ink: #ffffff;
+  --color-focus: rgba(15, 23, 42, 0.4);
+  --color-error: #0f172a;
+  --color-error-surface: rgba(0, 0, 0, 0.05);
+  --color-success: #0f172a;
+  --color-overlay: rgba(0, 0, 0, 0.4);
+  --color-shadow: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-paper: #07070a;
+  --color-paper-2: rgba(255, 255, 255, 0.035);
+  --color-paper-3: rgba(255, 255, 255, 0.07);
+  --color-surface-raised: rgba(255, 255, 255, 0.05);
+  --color-rule: rgba(255, 255, 255, 0.08);
+  --color-rule-strong: rgba(255, 255, 255, 0.16);
+  --color-muted: rgba(255, 255, 255, 0.55);
+  --color-ink-2: rgba(255, 255, 255, 0.85);
+  --color-ink: #ffffff;
+  --color-accent: #ffffff;
+  --color-accent-hover: #e5e5e5;
+  --color-accent-ink: #07070a;
+  --color-focus: rgba(255, 255, 255, 0.5);
+  --color-error: #ffffff;
+  --color-error-surface: rgba(255, 255, 255, 0.08);
+  --color-success: #ffffff;
+  --color-overlay: rgba(0, 0, 0, 0.75);
+  --color-shadow: rgba(0, 0, 0, 0.5);
+}

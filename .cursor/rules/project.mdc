@@ -1,0 +1,6 @@
+---
+description: Authapp repository workflow and security contract
+alwaysApply: true
+---
+
+Read `AGENTS.md` and the active task before editing. Preserve user work and run Git/ACKit preflight. Electron main is the security boundary; never expose Node/FS/DB/crypto/raw IPC to renderer, never log secrets or OTPs, and runtime-validate IPC with shared Zod schemas. Run focused checks and `npm run verify` before completion. Hosted/destructive actions require explicit authorization.

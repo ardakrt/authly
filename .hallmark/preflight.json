@@ -1,0 +1,12 @@
+{
+  "date": "2026-08-09",
+  "signals": {
+    "fontStack": null,
+    "palette": null,
+    "motion": "motion-cut",
+    "spacing": null,
+    "framework": "empty repository"
+  },
+  "preserve": [],
+  "introduce": ["tokens", "microinteraction discipline", "responsive app shell"]
+}
