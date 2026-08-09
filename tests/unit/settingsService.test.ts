@@ -14,6 +14,7 @@ describe('SettingsService', () => {
 
     expect(settings).toEqual({
       theme: 'system',
+      language: 'tr',
       closeToTray: true,
       startMinimized: false,
     });
@@ -27,14 +28,16 @@ describe('SettingsService', () => {
     } as unknown as SettingsRepository;
 
     const service = new SettingsService(mockRepo);
-    const updated = service.updateSettings({ closeToTray: false, theme: 'dark' });
+    const updated = service.updateSettings({ closeToTray: false, theme: 'dark', language: 'en' });
 
     expect(updated).toEqual({
       theme: 'dark',
+      language: 'en',
       closeToTray: false,
       startMinimized: false,
     });
     expect(store.get('closeToTray')).toBe('false');
     expect(store.get('theme')).toBe('dark');
+    expect(store.get('language')).toBe('en');
   });
 });

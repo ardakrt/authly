@@ -1,9 +1,10 @@
-import { Check, Copy, KeyRound, Plus, Trash2 } from 'lucide-react';
+﻿import { Check, Copy, KeyRound, Plus, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { AccountDto } from '@shared/schemas/account';
 import type { TotpCode } from '@shared/schemas/totp';
 import { PageHeading } from '../components/PageHeading';
+import { useLanguage } from '../hooks/useLanguage';
 
 export function HomePage(): React.JSX.Element {
   const [accounts, setAccounts] = useState<AccountDto[]>([]);
@@ -12,6 +13,7 @@ export function HomePage(): React.JSX.Element {
   const [error, setError] = useState(false);
   const [copiedAccountId, setCopiedAccountId] = useState<string | null>(null);
   const [now, setNow] = useState<number>(() => Date.now());
+  const { t } = useLanguage();
 
   const refresh = useCallback(async () => {
     try {
@@ -49,7 +51,7 @@ export function HomePage(): React.JSX.Element {
   }, [refresh]);
 
   async function remove(account: AccountDto): Promise<void> {
-    if (!window.confirm(`${account.issuer} (${account.accountName}) hesabı silinsin mi?`)) return;
+    if (!window.confirm(`${account.issuer} (${account.accountName}) ${t('deleteConfirm')}`)) return;
     await window.authapp.deleteAccount({ id: account.id });
     await refresh();
   }
@@ -65,12 +67,12 @@ export function HomePage(): React.JSX.Element {
   return (
     <section className="workspace" aria-labelledby="accounts-title">
       <PageHeading
-        title={accounts.length ? 'Doğrulama Kodları' : 'İki Adımlı Doğrulama Kodları'}
-        description="Kodlar cihazınızda çevrimdışı ve güvenle üretilir."
+        title={accounts.length ? t('codesTitle') : t('codesTitleEmpty')}
+        description={t('codesSubtitle')}
         action={
           <Link className="primary-link primary-link--large" to="/add">
             <Plus size={18} />
-            <span>Hesap Ekle</span>
+            <span>{t('addAccountBtn')}</span>
           </Link>
         }
       />
@@ -93,14 +95,11 @@ export function HomePage(): React.JSX.Element {
             <div className="empty-state__icon liquid-glass-pill">
               <KeyRound size={28} />
             </div>
-            <h2>Henüz hesap eklenmedi</h2>
-            <p>
-              QR kod görseli yükleyerek, panodan yapıştırarak veya kurulum anahtarı girerek ilk
-              hesabınızı ekleyin.
-            </p>
+            <h2>{t('emptyTitle')}</h2>
+            <p>{t('emptyDesc')}</p>
             <Link className="primary-link" to="/add">
               <Plus size={18} />
-              <span>İlk Hesabını Ekle</span>
+              <span>{t('addFirstAccount')}</span>
             </Link>
           </div>
         ) : (
@@ -125,7 +124,7 @@ export function HomePage(): React.JSX.Element {
                     </div>
                     <button
                       className="icon-button liquid-glass-pill"
-                      aria-label="Hesabı sil"
+                      aria-label={t('deleteAccount')}
                       onClick={() => void remove(account)}
                     >
                       <Trash2 size={16} />
@@ -142,11 +141,11 @@ export function HomePage(): React.JSX.Element {
                     >
                       {isCopied ? (
                         <>
-                          <Check size={15} /> Kopyalandı
+                          <Check size={15} /> {t('copied')}
                         </>
                       ) : (
                         <>
-                          <Copy size={15} /> Kopyala
+                          <Copy size={15} /> {t('copy')}
                         </>
                       )}
                     </button>
@@ -154,7 +153,9 @@ export function HomePage(): React.JSX.Element {
 
                   <div className="countdown">
                     <span style={{ width: `${progress}%` }} />
-                    <small>{secondsLeft} sn</small>
+                    <small>
+                      {secondsLeft} {t('secLeft')}
+                    </small>
                   </div>
                 </article>
               );

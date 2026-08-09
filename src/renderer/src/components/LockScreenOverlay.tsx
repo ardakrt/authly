@@ -1,6 +1,7 @@
-import { Delete, KeyRound, Lock, ShieldAlert, Unlock } from 'lucide-react';
+﻿import { Delete, KeyRound, Lock, ShieldAlert, Unlock } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import type { LockStatus } from '@shared/schemas/lock';
+import { useLanguage } from '../hooks/useLanguage';
 
 export function LockScreenOverlay({
   onUnlock,
@@ -11,6 +12,7 @@ export function LockScreenOverlay({
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [verifying, setVerifying] = useState(false);
+  const { t } = useLanguage();
 
   const checkStatus = useCallback(async () => {
     try {
@@ -89,14 +91,14 @@ export function LockScreenOverlay({
   if (!status?.isLocked) return null;
 
   return (
-    <div className="lock-overlay" role="dialog" aria-modal="true" aria-label="Uygulama Kilitli">
+    <div className="lock-overlay" role="dialog" aria-modal="true" aria-label={t('lockTitle')}>
       <div className="lock-card liquid-glass-card">
         <div className="lock-header">
           <div className="lock-icon-badge liquid-glass-pill">
             <Lock size={32} />
           </div>
-          <h2>Authly Kilitli</h2>
-          <p>Devam etmek için Master PIN kodunuzu girin.</p>
+          <h2>{t('lockTitle')}</h2>
+          <p>{t('lockSubtitle')}</p>
         </div>
 
         {error ? (
@@ -127,7 +129,7 @@ export function LockScreenOverlay({
             type="button"
             className="keypad-btn keypad-btn--action liquid-glass-pill"
             onClick={backspace}
-            aria-label="Sil"
+            aria-label={t('lockClear')}
           >
             <Delete size={20} />
           </button>
@@ -143,7 +145,7 @@ export function LockScreenOverlay({
             className="keypad-btn keypad-btn--submit liquid-glass-pill"
             onClick={() => void handleVerify(pin)}
             disabled={verifying || pin.length < 4}
-            aria-label="Kilidi Aç"
+            aria-label={t('lockUnlock')}
           >
             {verifying ? <Unlock size={20} /> : <KeyRound size={20} />}
           </button>

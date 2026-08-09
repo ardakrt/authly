@@ -1,22 +1,27 @@
-import { ArrowRight, Plus, Search, Settings } from 'lucide-react';
+﻿import { ArrowRight, Plus, Search, Settings } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../hooks/useLanguage';
 
 interface SearchDialogProps {
   open: boolean;
   onClose: () => void;
 }
 
-const actions = [
-  { label: 'Yeni hesap ekle', path: '/add', icon: Plus },
-  { label: 'Ayarları aç', path: '/settings', icon: Settings },
-] as const;
-
 export function SearchDialog({ open, onClose }: SearchDialogProps): React.JSX.Element {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
+  const { t } = useLanguage();
+
+  const actions = useMemo(
+    () => [
+      { label: t('cmdAddAccount'), path: '/add', icon: Plus },
+      { label: t('cmdOpenSettings'), path: '/settings', icon: Settings },
+    ],
+    [t],
+  );
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -36,7 +41,7 @@ export function SearchDialog({ open, onClose }: SearchDialogProps): React.JSX.El
     return actions.filter((action) =>
       action.label.toLocaleLowerCase('tr').includes(normalizedQuery),
     );
-  }, [query]);
+  }, [query, actions]);
 
   const choose = (path: string): void => {
     setQuery('');
@@ -62,22 +67,20 @@ export function SearchDialog({ open, onClose }: SearchDialogProps): React.JSX.El
         <label className="search-field" htmlFor="account-search">
           <Search size={19} aria-hidden="true" />
           <span className="sr-only" id="search-title">
-            Hesaplarda ara
+            {t('navSearch')}
           </span>
           <input
             ref={inputRef}
             id="account-search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Hesap veya komut ara"
+            placeholder={t('searchPlaceholder')}
             autoComplete="off"
           />
           <kbd>Esc</kbd>
         </label>
         <div className="search-results" aria-live="polite">
-          <p className="search-results__meta">
-            Kayıtlı hesap yok. Kullanılabilir uygulama komutları:
-          </p>
+          <p className="search-results__meta">{t('searchNoAccounts')}</p>
           {filteredActions.map(({ label, path, icon: Icon }) => (
             <button key={path} type="button" onClick={() => choose(path)}>
               <Icon size={18} aria-hidden="true" />
@@ -86,7 +89,7 @@ export function SearchDialog({ open, onClose }: SearchDialogProps): React.JSX.El
             </button>
           ))}
           {filteredActions.length === 0 ? (
-            <p className="search-results__empty">Bu aramayla eşleşen komut yok.</p>
+            <p className="search-results__empty">{t('searchNoMatch')}</p>
           ) : null}
         </div>
       </div>

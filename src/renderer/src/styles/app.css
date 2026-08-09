@@ -1638,3 +1638,153 @@ button:disabled,
     transform: none;
   }
 }
+
+/* Minimalist Settings Layout */
+.settings-minimal-wrapper {
+  max-width: 48rem;
+  margin-inline: auto;
+}
+
+.settings-minimal-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.setting-row-minimal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: 1.75rem;
+  border-block-end: 1px solid var(--color-rule);
+  gap: 1rem;
+}
+
+.setting-row-minimal:last-child {
+  border-block-end: 0;
+}
+
+.setting-label-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.setting-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--color-ink-2);
+  border: 1px solid var(--color-rule);
+}
+
+.setting-title {
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.glass-pill-group {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-rule);
+  border-radius: 9999px;
+}
+
+.glass-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 9999px;
+  font-size: 0.781rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-pill-btn:hover {
+  color: var(--color-ink);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.glass-pill-btn.is-active {
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  border-color: var(--color-accent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch-btn {
+  position: relative;
+  display: inline-flex;
+  height: 1.5rem;
+  width: 2.75rem;
+  align-items: center;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-rule-strong);
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+  padding: 0;
+}
+
+.toggle-switch-btn.is-checked {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.toggle-switch-dot {
+  display: inline-block;
+  height: 1rem;
+  width: 1rem;
+  transform: translateX(0.2rem);
+  border-radius: 9999px;
+  background: #ffffff;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.toggle-switch-btn.is-checked .toggle-switch-dot {
+  transform: translateX(1.45rem);
+  background: var(--color-accent-ink);
+}
+
+[data-theme='light'] .setting-icon-box {
+  background: rgba(0, 0, 0, 0.04);
+  color: #0f172a;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='light'] .glass-pill-group {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='light'] .glass-pill-btn {
+  color: #64748b;
+}
+
+[data-theme='light'] .glass-pill-btn.is-active {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+[data-theme='light'] .toggle-switch-btn {
+  background: rgba(0, 0, 0, 0.12);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme='light'] .toggle-switch-btn.is-checked {
+  background: #0f172a;
+}

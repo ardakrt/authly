@@ -1,4 +1,4 @@
-import {
+﻿import {
   ArrowLeft,
   CheckCircle2,
   ChevronDown,
@@ -15,6 +15,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import type { CreateAccountRequest } from '@shared/schemas/account';
 import { PageHeading } from '../components/PageHeading';
 import { decodeQrFromImageFile, processScannedQrContent } from '../utils/qrDecoder';
+import { useLanguage } from '../hooks/useLanguage';
 
 type AddMode = 'upload' | 'manual';
 
@@ -42,6 +43,7 @@ const popularServices = [
 
 export function AddAccountPage(): React.JSX.Element {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [mode, setMode] = useState<AddMode>('upload');
   const [form, setForm] = useState<CreateAccountRequest>(defaultForm);
   const [batchAccounts, setBatchAccounts] = useState<
@@ -71,7 +73,7 @@ export function AddAccountPage(): React.JSX.Element {
         setScannedPreview(true);
         setError('');
         setSuccessMsg(
-          `Google Authenticator dışa aktarım QR kodunda ${parsedList.length} adet hesap bulundu! İçe aktarmak istediklerini seçip kaydedebilirsin.`,
+          `Google Authenticator dışa aktarım QR kodunda ${parsedList.length} adet hesap bulundu! İçer aktarmak istediklerini seçip kaydedebilirsin.`,
         );
       }
     } catch (err) {
@@ -158,15 +160,15 @@ export function AddAccountPage(): React.JSX.Element {
   async function submitSingleForm(event: FormEvent): Promise<void> {
     event.preventDefault();
     if (!form.issuer.trim()) {
-      setError('Lütfen bir servis adı girin (Örn: Google, GitHub).');
+      setError('Lütfen bir servis adı girin.');
       return;
     }
     if (!form.accountName.trim()) {
-      setError('Lütfen bir hesap adı veya e-posta adresi girin.');
+      setError('Lütfen bir hesap adı girin.');
       return;
     }
     if (!form.secret.trim()) {
-      setError('Lütfen geçerli bir kurulum anahtarı (secret) girin.');
+      setError('Lütfen geçerli bir kurulum anahtarı girin.');
       return;
     }
 
@@ -176,7 +178,7 @@ export function AddAccountPage(): React.JSX.Element {
       await window.authapp.createAccount(form);
       navigate('/');
     } catch {
-      setError('Hesap kaydedilemedi. Kurulum anahtarını (secret) kontrol edin.');
+      setError('Hesap kaydedilemedi. Kurulum anahtarını kontrol edin.');
       setSaving(false);
     }
   }
@@ -217,11 +219,11 @@ export function AddAccountPage(): React.JSX.Element {
   return (
     <section className="workspace add-account-flow">
       <PageHeading
-        title="Yeni Hesap Ekle"
-        description="Google Authenticator çoklu dışa aktarım QR kollarını, tekli QR görsellerini yükleyebilir, panodan yapıştırabilir veya manuel girebilirsiniz."
+        title={t('addNewAccount')}
+        description={t('addSubtitle')}
         action={
           <Link className="secondary-link" to="/">
-            <ArrowLeft size={18} /> Ana Ekrana Dön
+            <ArrowLeft size={18} /> {t('backHome')}
           </Link>
         }
       />
@@ -241,7 +243,7 @@ export function AddAccountPage(): React.JSX.Element {
           }}
         >
           <Upload size={18} />
-          <span>QR Görseli Yükle / Yapıştır</span>
+          <span>{t('tabUpload')}</span>
         </button>
 
         <button
@@ -257,7 +259,7 @@ export function AddAccountPage(): React.JSX.Element {
           }}
         >
           <KeyRound size={18} />
-          <span>Kurulum Anahtarı Gir</span>
+          <span>{t('tabManual')}</span>
         </button>
       </div>
 
@@ -280,10 +282,8 @@ export function AddAccountPage(): React.JSX.Element {
         <div className="upload-container">
           <label className="drag-drop-zone">
             <Upload size={40} className="upload-icon" />
-            <span className="upload-title">QR Kod Görseli Seçin veya Sürükleyin</span>
-            <span className="upload-subtitle">
-              Tekli veya Google Authenticator çoklu dışa aktarım QR kodları desteklenir
-            </span>
+            <span className="upload-title">{t('dragDropTitle')}</span>
+            <span className="upload-subtitle">{t('dragDropSub')}</span>
             <input
               type="file"
               accept="image/*"
@@ -293,7 +293,7 @@ export function AddAccountPage(): React.JSX.Element {
           </label>
 
           <div className="or-divider">
-            <span>VEYA</span>
+            <span>{t('orDivider')}</span>
           </div>
 
           <button
@@ -302,7 +302,7 @@ export function AddAccountPage(): React.JSX.Element {
             onClick={() => void handlePaste()}
           >
             <Clipboard size={18} />
-            <span>Panodan Yapıştır (Ekran görüntüsü / kopyalanan QR)</span>
+            <span>{t('pasteClipboard')}</span>
             <kbd>Ctrl V</kbd>
           </button>
         </div>
@@ -363,7 +363,7 @@ export function AddAccountPage(): React.JSX.Element {
                 setSuccessMsg('');
               }}
             >
-              <RefreshCw size={16} /> İptal Et
+              <RefreshCw size={16} /> {t('cancel')}
             </button>
 
             <button
@@ -373,9 +373,7 @@ export function AddAccountPage(): React.JSX.Element {
               onClick={() => void submitBatch()}
             >
               <Save size={18} />
-              <span>
-                {saving ? 'Aktarılıyor...' : `Seçili ${selectedBatchCount} Hesabı Kaydet`}
-              </span>
+              <span>{saving ? t('saving') : `Seçili ${selectedBatchCount} Hesabı Kaydet`}</span>
             </button>
           </div>
         </div>
@@ -392,7 +390,7 @@ export function AddAccountPage(): React.JSX.Element {
           {/* Quick Service Suggestions for manual mode */}
           {mode === 'manual' && (
             <div className="service-chips">
-              <span className="chips-label">Popüler Servisler:</span>
+              <span className="chips-label">{t('popularServices')}</span>
               <div className="chips-list">
                 {popularServices.map((srv) => (
                   <button
@@ -410,7 +408,7 @@ export function AddAccountPage(): React.JSX.Element {
 
           <div className="form-grid">
             <label>
-              <span>Servis Adı</span>
+              <span>{t('serviceName')}</span>
               <input
                 required
                 maxLength={120}
@@ -421,7 +419,7 @@ export function AddAccountPage(): React.JSX.Element {
             </label>
 
             <label>
-              <span>Hesap Adı veya E-posta</span>
+              <span>{t('accountNameEmail')}</span>
               <input
                 required
                 maxLength={240}
@@ -432,7 +430,7 @@ export function AddAccountPage(): React.JSX.Element {
             </label>
 
             <label className="form-full-width">
-              <span>Kurulum Anahtarı (Secret Key)</span>
+              <span>{t('secretKey')}</span>
               <input
                 required
                 autoComplete="off"
@@ -451,14 +449,14 @@ export function AddAccountPage(): React.JSX.Element {
               className="advanced-toggle-btn"
               onClick={() => setShowAdvanced(!showAdvanced)}
             >
-              <span>Gelişmiş Seçenekler (Algoritma, Hane, Periyot)</span>
+              <span>{t('advancedOptions')}</span>
               {showAdvanced ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
 
             {showAdvanced && (
               <div className="advanced-fields-grid">
                 <label>
-                  <span>Algoritma</span>
+                  <span>{t('algorithm')}</span>
                   <select
                     value={form.algorithm}
                     onChange={(e) =>
@@ -468,14 +466,14 @@ export function AddAccountPage(): React.JSX.Element {
                       })
                     }
                   >
-                    <option value="SHA1">SHA-1 (Varsayılan)</option>
+                    <option value="SHA1">SHA-1</option>
                     <option value="SHA256">SHA-256</option>
                     <option value="SHA512">SHA-512</option>
                   </select>
                 </label>
 
                 <label>
-                  <span>Hane Sayısı</span>
+                  <span>{t('digits')}</span>
                   <input
                     type="number"
                     min="6"
@@ -486,7 +484,7 @@ export function AddAccountPage(): React.JSX.Element {
                 </label>
 
                 <label>
-                  <span>Yenilenme Süresi (Saniye)</span>
+                  <span>{t('period')}</span>
                   <input
                     type="number"
                     min="5"
@@ -515,7 +513,7 @@ export function AddAccountPage(): React.JSX.Element {
 
             <button className="primary-link form-submit-btn" disabled={saving} type="submit">
               <Save size={18} />
-              <span>{saving ? 'Kaydediliyor...' : 'Hesabı Güvenle Kaydet'}</span>
+              <span>{saving ? t('saving') : t('saveAccount')}</span>
             </button>
           </div>
         </form>

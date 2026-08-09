@@ -1,32 +1,47 @@
 import {
   Download,
   ExternalLink,
+  Globe,
   HardDrive,
   Monitor,
   Moon,
+  Palette,
   RefreshCw,
+  ShieldCheck,
   Sun,
   Upload,
+  X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { PageHeading } from '../components/PageHeading';
 import { useTheme } from '../hooks/useTheme';
+import { useLanguage } from '../hooks/useLanguage';
 import type { ThemePreference } from '../app/themeContext';
+import type { Language } from '../utils/translations';
 import type { AppSettings } from '@shared/schemas/settings';
 import type { UpdateInfo } from '@shared/schemas/update';
 
 const themes: ReadonlyArray<{
   value: ThemePreference;
-  label: string;
+  labelKey: 'themeSystem' | 'themeLight' | 'themeDark';
   icon: typeof Monitor;
 }> = [
-  { value: 'system', label: 'Sistem', icon: Monitor },
-  { value: 'light', label: 'Açık', icon: Sun },
-  { value: 'dark', label: 'Koyu', icon: Moon },
+  { value: 'system', labelKey: 'themeSystem', icon: Monitor },
+  { value: 'light', labelKey: 'themeLight', icon: Sun },
+  { value: 'dark', labelKey: 'themeDark', icon: Moon },
+];
+
+const languages: ReadonlyArray<{
+  value: Language;
+  labelKey: 'langTr' | 'langEn';
+}> = [
+  { value: 'tr', labelKey: 'langTr' },
+  { value: 'en', labelKey: 'langEn' },
 ];
 
 export function SettingsPage(): React.JSX.Element {
   const { preference, setPreference } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [exportPassword, setExportPassword] = useState('');
   const [importPassword, setImportPassword] = useState('');
@@ -83,7 +98,7 @@ export function SettingsPage(): React.JSX.Element {
       if (result.success) {
         setStatusMsg({
           type: 'success',
-          message: `${result.exportedCount} adet hesap başarıyla şifreli yedek dosyasına aktarıldı.`,
+          message: `${result.exportedCount} ${t('exportSuccess')}`,
         });
         setShowExportForm(false);
         setExportPassword('');
@@ -111,7 +126,7 @@ export function SettingsPage(): React.JSX.Element {
       if (result.success) {
         setStatusMsg({
           type: 'success',
-          message: `Yedekten ${result.importedCount} hesap başarıyla içe aktarıldı. (${result.skippedCount} atlandı)`,
+          message: `${result.importedCount} ${t('importSuccess')}`,
         });
         setShowImportForm(false);
         setImportPassword('');
@@ -127,11 +142,8 @@ export function SettingsPage(): React.JSX.Element {
   };
 
   return (
-    <section className="workspace settings-page">
-      <PageHeading
-        title="Ayarlar"
-        description="Uygulama görünümünü kişiselleştirin, verilerinizi yedekleyin ve güncellemeleri kontrol edin."
-      />
+    <section className="workspace settings-minimal-wrapper">
+      <PageHeading title={t('settingsTitle')} description={t('settingsSubtitle')} />
 
       {statusMsg ? (
         <div
@@ -142,107 +154,143 @@ export function SettingsPage(): React.JSX.Element {
         </div>
       ) : null}
 
-      <section className="settings-section" aria-labelledby="appearance-title">
-        <div>
-          <h2 id="appearance-title">Görünüm ve Tema</h2>
-          <p>Uygulamanızın renk ve tema tercihini belirleyin.</p>
-        </div>
-        <div className="theme-options" role="group" aria-label="Tema">
-          {themes.map(({ value, label, icon: Icon }) => (
-            <button
-              type="button"
-              key={value}
-              className={preference === value ? 'is-active' : undefined}
-              aria-pressed={preference === value}
-              onClick={() => setPreference(value)}
-            >
-              <Icon size={18} aria-hidden="true" />
-              <span>{label}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="settings-section" aria-labelledby="tray-title">
-        <div>
-          <h2 id="tray-title">Sistem Tepsisi ve Uygulama Davranışı</h2>
-          <p>Kapatma butonuna basıldığında uygulamanın nasıl davranacağını ayarlayın.</p>
-        </div>
-        <div className="status-list">
-          <div>
-            <dt className="status-title">
-              <HardDrive size={18} />
-              <span>Pencere Kapatıldığında Sistem Tepsisine Küçült</span>
-            </dt>
-            <dd>
+      <div className="settings-minimal-list">
+        {/* Appearance Row */}
+        <section className="setting-row-minimal">
+          <div className="setting-label-group">
+            <div className="setting-icon-box">
+              <Palette size={20} />
+            </div>
+            <h2 className="setting-title">{t('appearance')}</h2>
+          </div>
+          <div className="glass-pill-group" role="group" aria-label={t('appearance')}>
+            {themes.map(({ value, labelKey, icon: Icon }) => (
               <button
                 type="button"
-                className={`chip-btn ${settings?.closeToTray ? 'is-selected' : ''}`}
-                onClick={() => void toggleCloseToTray()}
+                key={value}
+                className={`glass-pill-btn ${preference === value ? 'is-active' : ''}`}
+                aria-pressed={preference === value}
+                onClick={() => setPreference(value)}
               >
-                {settings?.closeToTray
-                  ? 'Etkin (Tepside Çalışır)'
-                  : 'Devre Dışı (Uygulama Kapanır)'}
+                <Icon size={14} aria-hidden="true" />
+                <span>{t(labelKey)}</span>
               </button>
-            </dd>
+            ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="settings-section" aria-labelledby="backup-title">
-        <div>
-          <h2 id="backup-title">Şifreli Yedekleme ve Kurtarma</h2>
-          <p>
-            Tüm hesaplarınızı PBKDF2 + AES-256-GCM ile parola korumalı dosyaya aktarın veya geri
-            yükleyin.
-          </p>
-        </div>
-        <div className="form-actions-row" style={{ marginTop: '0.5rem' }}>
+        {/* Language Row */}
+        <section className="setting-row-minimal">
+          <div className="setting-label-group">
+            <div className="setting-icon-box">
+              <Globe size={20} />
+            </div>
+            <h2 className="setting-title">{t('language')}</h2>
+          </div>
+          <div className="glass-pill-group" role="group" aria-label={t('language')}>
+            {languages.map(({ value, labelKey }) => (
+              <button
+                type="button"
+                key={value}
+                className={`glass-pill-btn ${language === value ? 'is-active' : ''}`}
+                aria-pressed={language === value}
+                onClick={() => setLanguage(value)}
+              >
+                <span>{t(labelKey)}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* System Tray Row */}
+        <section className="setting-row-minimal">
+          <div className="setting-label-group">
+            <div className="setting-icon-box">
+              <HardDrive size={20} />
+            </div>
+            <h2 className="setting-title">{t('trayBehavior')}</h2>
+          </div>
           <button
             type="button"
-            className="secondary-link"
-            onClick={() => {
-              setShowExportForm(!showExportForm);
-              setShowImportForm(false);
-              setStatusMsg(null);
-            }}
+            className={`toggle-switch-btn ${settings?.closeToTray ? 'is-checked' : ''}`}
+            onClick={() => void toggleCloseToTray()}
+            aria-label={t('trayBehavior')}
           >
-            <Download size={18} />
-            <span>Şifreli Yedek İndir (Dışa Aktar)</span>
+            <span className="toggle-switch-dot" />
           </button>
+        </section>
 
-          <button
-            type="button"
-            className="secondary-link"
-            onClick={() => {
-              setShowImportForm(!showImportForm);
-              setShowExportForm(false);
-              setStatusMsg(null);
-            }}
-          >
-            <Upload size={18} />
-            <span>Yedek Dosyası Yükle (İçe Aktar)</span>
-          </button>
-        </div>
+        {/* Encrypted Backup Row */}
+        <section className="setting-row-minimal">
+          <div className="setting-label-group">
+            <div className="setting-icon-box">
+              <ShieldCheck size={20} />
+            </div>
+            <h2 className="setting-title">{t('backup')}</h2>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              type="button"
+              className="glass-pill-btn secondary-link"
+              onClick={() => {
+                setShowExportForm(!showExportForm);
+                setShowImportForm(false);
+                setStatusMsg(null);
+              }}
+            >
+              <Download size={14} />
+              <span>{t('exportBtn')}</span>
+            </button>
+            <button
+              type="button"
+              className="glass-pill-btn secondary-link"
+              onClick={() => {
+                setShowImportForm(!showImportForm);
+                setShowExportForm(false);
+                setStatusMsg(null);
+              }}
+            >
+              <Upload size={14} />
+              <span>{t('importBtn')}</span>
+            </button>
+          </div>
+        </section>
 
+        {/* Export Form Popover Modal */}
         {showExportForm && (
           <form
             className="account-form-card"
             onSubmit={(e) => void handleExport(e)}
             style={{ marginTop: '1rem' }}
           >
-            <div className="form-card-header">
-              <h3>Şifreli Dışa Aktarma Parolası</h3>
-              <p>Yedek dosyasını korumak için güçlü bir parola belirleyin.</p>
+            <div
+              className="form-card-header"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div>
+                <h3>{t('exportModalTitle')}</h3>
+                <p>{t('exportModalDesc')}</p>
+              </div>
+              <button
+                type="button"
+                className="icon-button"
+                onClick={() => setShowExportForm(false)}
+              >
+                <X size={16} />
+              </button>
             </div>
             <div className="form-grid">
               <label className="form-full-width">
-                <span>Yedek Parolası (En az 4 karakter)</span>
+                <span>{t('passwordLabel')}</span>
                 <input
                   type="password"
                   required
                   minLength={4}
-                  placeholder="••••••••"
+                  placeholder="********"
                   value={exportPassword}
                   onChange={(e) => setExportPassword(e.target.value)}
                 />
@@ -254,33 +302,50 @@ export function SettingsPage(): React.JSX.Element {
                 className="secondary-link"
                 onClick={() => setShowExportForm(false)}
               >
-                İptal
+                {t('cancel')}
               </button>
               <button type="submit" className="primary-link form-submit-btn" disabled={busy}>
-                <Download size={18} />
-                <span>{busy ? 'Dışa Aktarılıyor...' : 'Yedeği Oluştur ve Kaydet'}</span>
+                <Download size={16} />
+                <span>{busy ? t('checking') : t('submitExport')}</span>
               </button>
             </div>
           </form>
         )}
 
+        {/* Import Form Popover Modal */}
         {showImportForm && (
           <form
             className="account-form-card"
             onSubmit={(e) => void handleImport(e)}
             style={{ marginTop: '1rem' }}
           >
-            <div className="form-card-header">
-              <h3>Yedek Dosyası Parolası</h3>
-              <p>Yedek oluşturulurken kullanılan parolayı girin.</p>
+            <div
+              className="form-card-header"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div>
+                <h3>{t('importModalTitle')}</h3>
+                <p>{t('importModalDesc')}</p>
+              </div>
+              <button
+                type="button"
+                className="icon-button"
+                onClick={() => setShowImportForm(false)}
+              >
+                <X size={16} />
+              </button>
             </div>
             <div className="form-grid">
               <label className="form-full-width">
-                <span>Yedek Parolası</span>
+                <span>{t('passwordLabel')}</span>
                 <input
                   type="password"
                   required
-                  placeholder="••••••••"
+                  placeholder="********"
                   value={importPassword}
                   onChange={(e) => setImportPassword(e.target.value)}
                 />
@@ -292,72 +357,52 @@ export function SettingsPage(): React.JSX.Element {
                 className="secondary-link"
                 onClick={() => setShowImportForm(false)}
               >
-                İptal
+                {t('cancel')}
               </button>
               <button type="submit" className="primary-link form-submit-btn" disabled={busy}>
-                <Upload size={18} />
-                <span>{busy ? 'Şifre Çözülüyor...' : 'Dosyayı Seç ve İçe Aktar'}</span>
+                <Upload size={16} />
+                <span>{busy ? t('checking') : t('submitImport')}</span>
               </button>
             </div>
           </form>
         )}
-      </section>
 
-      <section className="settings-section" aria-labelledby="update-title">
-        <div>
-          <h2 id="update-title">Güncellemeler</h2>
-          <p>GitHub üzerinden uygulamanın en güncel sürümünü kontrol edin.</p>
-        </div>
-        <div className="status-list">
-          <div>
-            <dt className="status-title">
-              <RefreshCw size={18} />
-              <span>GitHub Sürüm Denetimi</span>
-            </dt>
-            <dd style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+        {/* Updates Row */}
+        <section className="setting-row-minimal">
+          <div className="setting-label-group">
+            <div className="setting-icon-box">
+              <RefreshCw size={20} className={checkingUpdate ? 'animate-spin' : undefined} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <h2 className="setting-title">{t('updates')}</h2>
+              <span style={{ fontSize: '0.78rem', color: '#34d399', fontWeight: 500 }}>
+                {updateInfo?.hasUpdate
+                  ? `v${updateInfo.latestVersion} (${t('newVersion')})`
+                  : t('upToDate')}
+              </span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {updateInfo?.hasUpdate && updateInfo.releaseUrl && (
               <button
                 type="button"
-                className="secondary-link"
-                disabled={checkingUpdate}
-                onClick={() => void handleCheckUpdate()}
+                className="primary-link"
+                onClick={() => void window.authapp.openExternalUrl(updateInfo.releaseUrl!)}
               >
-                <RefreshCw size={16} className={checkingUpdate ? 'animate-spin' : undefined} />
-                <span>{checkingUpdate ? 'Denetleniyor...' : 'Güncellemeleri Denetle'}</span>
+                <ExternalLink size={14} />
               </button>
-              {updateInfo?.hasUpdate && updateInfo.releaseUrl && (
-                <button
-                  type="button"
-                  className="primary-link"
-                  onClick={() => void window.authapp.openExternalUrl(updateInfo.releaseUrl!)}
-                >
-                  <ExternalLink size={16} />
-                  <span>Sürümü İncele (v{updateInfo.latestVersion})</span>
-                </button>
-              )}
-            </dd>
+            )}
+            <button
+              type="button"
+              className="glass-pill-btn secondary-link"
+              disabled={checkingUpdate}
+              onClick={() => void handleCheckUpdate()}
+            >
+              <span>{checkingUpdate ? t('checking') : t('checkUpdateBtn')}</span>
+            </button>
           </div>
-        </div>
-
-        {updateInfo && (
-          <div
-            style={{ marginTop: '0.75rem' }}
-            className={
-              updateInfo.hasUpdate
-                ? 'success-banner'
-                : updateInfo.error
-                  ? 'error-banner'
-                  : 'success-banner'
-            }
-            role="status"
-          >
-            {updateInfo.hasUpdate
-              ? `Yeni bir sürüm mevcut: v${updateInfo.latestVersion} (Mevcut: v${updateInfo.currentVersion})`
-              : updateInfo.error
-                ? updateInfo.error
-                : `Uygulamanız güncel (v${updateInfo.currentVersion}).`}
-          </div>
-        )}
-      </section>
+        </section>
+      </div>
     </section>
   );
 }
