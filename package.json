@@ -11,7 +11,7 @@
   "main": "out/main/index.cjs",
   "type": "module",
   "scripts": {
-    "postinstall": "electron-builder install-app-deps",
+    "postinstall": "install-electron && electron-builder install-app-deps",
     "predev": "electron-builder install-app-deps",
     "dev": "electron-vite dev",
     "start": "electron-vite preview",
