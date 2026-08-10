@@ -10,12 +10,52 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { AccountDto } from '@shared/schemas/account';
 import type { TotpCode } from '@shared/schemas/totp';
 import { PageHeading } from '../components/PageHeading';
 import { useLanguage } from '../hooks/useLanguage';
+
+const Countdown = memo(function Countdown({ period }: { period: number }): React.JSX.Element {
+  const { t } = useLanguage();
+  const normalizedPeriod = Math.max(1, period);
+  const periodMs = normalizedPeriod * 1000;
+  const [secondsLeft, setSecondsLeft] = useState(() =>
+    Math.ceil((periodMs - (Date.now() % periodMs)) / 1000),
+  );
+  const [animationDelay] = useState(() => `-${Date.now() % periodMs}ms`);
+
+  useEffect(() => {
+    let timer = 0;
+
+    const updateSeconds = () => {
+      const currentTime = Date.now();
+      const remaining = periodMs - (currentTime % periodMs);
+      setSecondsLeft(Math.ceil(remaining / 1000));
+      timer = window.setTimeout(updateSeconds, 1000 - (currentTime % 1000) + 16);
+    };
+
+    updateSeconds();
+    return () => window.clearTimeout(timer);
+  }, [periodMs]);
+
+  return (
+    <div
+      className="countdown"
+      role="progressbar"
+      aria-label={`${secondsLeft} ${t('secLeft')}`}
+      aria-valuemin={0}
+      aria-valuemax={normalizedPeriod}
+      aria-valuenow={secondsLeft}
+    >
+      <span
+        className="countdown__bar"
+        style={{ animationDuration: `${periodMs}ms`, animationDelay }}
+      />
+    </div>
+  );
+});
 
 export function HomePage(): React.JSX.Element {
   const [accounts, setAccounts] = useState<AccountDto[]>([]);
@@ -23,8 +63,6 @@ export function HomePage(): React.JSX.Element {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [copiedAccountId, setCopiedAccountId] = useState<string | null>(null);
-  const [now, setNow] = useState<number>(() => Date.now());
-
   const [activeMenuAccountId, setActiveMenuAccountId] = useState<string | null>(null);
   const [deletingAccount, setDeletingAccount] = useState<AccountDto | null>(null);
   const [deletingBusy, setDeletingBusy] = useState(false);
@@ -59,43 +97,29 @@ export function HomePage(): React.JSX.Element {
   }, []);
 
   useEffect(() => {
-    let isMounted = true;
+    const initialTimer = window.setTimeout(() => void refresh(), 0);
+    const handleFocus = () => void refresh();
 
-    const loadData = async () => {
-      try {
-        const [nextAccounts, nextCodes] = await Promise.all([
-          window.authapp.listAccounts(),
-          window.authapp.getTotpCodes(),
-        ]);
-        if (isMounted) {
-          setAccounts(nextAccounts);
-          setCodes(nextCodes);
-          setError(false);
-        }
-      } catch (reason) {
-        if (import.meta.env.DEV) {
-          console.error(
-            'Account refresh failed:',
-            reason instanceof Error ? reason.message : 'unknown error',
-          );
-        }
-        if (isMounted) setError(true);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.clearTimeout(initialTimer);
+      window.removeEventListener('focus', handleFocus);
     };
+  }, [refresh]);
 
-    const initialTimer = window.setTimeout(() => void loadData(), 0);
-    let lastSec = -1;
+  useEffect(() => {
+    let isMounted = true;
+    let lastSec = Math.floor(Date.now() / 1000);
 
-    const timer = window.setInterval(() => {
+    const codeRefreshTimer = window.setInterval(() => {
       const currentTime = Date.now();
       const currentSec = Math.floor(currentTime / 1000);
 
-      setNow(currentTime);
-
-      if (lastSec !== -1 && currentSec !== lastSec) {
-        const periodRolled = accounts.some((acc) => currentSec % (acc.period || 30) === 0);
+      if (currentSec !== lastSec) {
+        const periodRolled = accounts.some((account) => {
+          const period = account.period || 30;
+          return Math.floor(lastSec / period) !== Math.floor(currentSec / period);
+        });
         if (periodRolled || (accounts.length > 0 && codes.length === 0)) {
           void window.authapp
             .getTotpCodes()
@@ -108,23 +132,9 @@ export function HomePage(): React.JSX.Element {
       lastSec = currentSec;
     }, 1000);
 
-    const handleFocus = () => {
-      setNow(Date.now());
-      void window.authapp
-        .getTotpCodes()
-        .then((nextCodes) => {
-          if (isMounted) setCodes(nextCodes);
-        })
-        .catch(() => {});
-    };
-
-    window.addEventListener('focus', handleFocus);
-
     return () => {
       isMounted = false;
-      window.clearTimeout(initialTimer);
-      window.clearInterval(timer);
-      window.removeEventListener('focus', handleFocus);
+      window.clearInterval(codeRefreshTimer);
     };
   }, [accounts, codes.length]);
 
@@ -247,10 +257,6 @@ export function HomePage(): React.JSX.Element {
             <div className="account-grid">
               {accounts.map((account) => {
                 const value = codes.find((item) => item.accountId === account.id);
-                const periodMs = (value?.period ?? 30) * 1000;
-                const msRemaining = periodMs - (now % periodMs);
-                const progress = (msRemaining / periodMs) * 100;
-                const secondsLeft = Math.ceil(msRemaining / 1000);
                 const isCopied = copiedAccountId === account.id;
                 const isMenuOpen = activeMenuAccountId === account.id;
 
@@ -316,12 +322,10 @@ export function HomePage(): React.JSX.Element {
                       </button>
                     </div>
 
-                    <div className="countdown">
-                      <span style={{ width: `${progress}%` }} />
-                      <small>
-                        {secondsLeft} {t('secLeft')}
-                      </small>
-                    </div>
+                    <Countdown
+                      key={`${account.id}:${value?.period ?? account.period ?? 30}`}
+                      period={value?.period ?? account.period ?? 30}
+                    />
                   </article>
                 );
               })}

@@ -396,20 +396,29 @@ select {
   overflow: hidden;
 }
 
-.countdown span {
+.countdown__bar {
   display: block;
+  width: 100%;
   height: 100%;
   background: var(--color-ink);
   border-radius: inherit;
-  transition: width 100ms linear;
+  transform: scaleX(1);
+  transform-origin: left center;
+  animation-name: countdown-shrink;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
 }
 
-.countdown small {
-  position: absolute;
-  inset-inline-end: 0;
-  inset-block-start: 0.7rem;
-  color: var(--color-muted);
+@keyframes countdown-shrink {
+  from {
+    transform: scaleX(1);
+  }
+
+  to {
+    transform: scaleX(0);
+  }
 }
 
 button,
@@ -1229,12 +1238,8 @@ kbd {
   background: rgba(0, 0, 0, 0.08);
 }
 
-[data-theme='light'] .countdown span {
+[data-theme='light'] .countdown__bar {
   background: #0f172a;
-}
-
-[data-theme='light'] .countdown small {
-  color: #64748b;
 }
 
 [data-theme='light'] .page-heading h1 {
