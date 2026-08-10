@@ -11,7 +11,7 @@ Authly is a Windows-first, offline desktop authenticator built with Electron, Re
 - **System Tray & Hotkeys**: Minimize to Windows system tray, quick clipboard copy with auto-clipboard clear after 15 seconds.
 - **Theme & Appearance**: System, dark, and light visual modes built with custom UI tokens and clean accessibility.
 - **GitHub Release Update Check**: In-app one-click update checking against official GitHub releases.
-- **Isolated Renderer Security**: Strict IPC sandboxing, custom uthapp:// protocol, zero raw Node/filesystem access in renderer.
+- **Isolated Renderer Security**: Strict IPC sandboxing, custom authapp:// protocol, zero raw Node/filesystem access in renderer.
 
 ## Privacy & Security
 
@@ -32,49 +32,49 @@ Authly is designed with a local-first security architecture:
 
 Install dependencies:
 
-`ash
+```bash
 npm install
-`
+```
 
 ## Development
 
 Run the Vite dev server and Electron app:
 
-`ash
+```bash
 npm run dev
-`
+```
 
 ## Verification & Testing
 
 Run full quality gates (formatting, linting, tests, strict TypeScript build, and visual/runtime smoke testing):
 
-`powershell
+```powershell
 npm run verify
-`
+```
 
 Run individual quality checks:
 
-`powershell
+```powershell
 npm run typecheck
 npm run lint
 npm test
 npm run build
 npm run smoke
-`
+```
 
 ## Build & Distribution
 
 Package the standalone Windows NSIS installer:
 
-`powershell
+```powershell
 npm run package:win
-`
+```
 
-Installers and packaged outputs are generated in the dist/ directory.
+Installers and packaged outputs are generated in the `dist/` directory.
 
 ## Local Data
 
-Runtime data (SQLite database, encrypted Vault secrets, application settings) is stored locally in Windows %APPDATA%\authapp and is excluded from Git. Do not commit personal backups, local database files, or master PIN hashes.
+Runtime data (SQLite database, encrypted Vault secrets, application settings) is stored locally in Windows `%APPDATA%\authapp` and is excluded from Git. Do not commit personal backups, local database files, or master PIN hashes.
 
 ## License
 
