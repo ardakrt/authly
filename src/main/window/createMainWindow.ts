@@ -44,6 +44,7 @@ export async function createMainWindow(developmentUrl?: string): Promise<Browser
       nodeIntegration: false,
       sandbox: true,
       webSecurity: true,
+      backgroundThrottling: true,
       devTools: Boolean(developmentUrl) && !process.env['AUTHAPP_DISABLE_DEVTOOLS'],
     },
   });

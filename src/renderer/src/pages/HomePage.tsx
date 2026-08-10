@@ -59,16 +59,74 @@ export function HomePage(): React.JSX.Element {
   }, []);
 
   useEffect(() => {
-    const initial = window.setTimeout(() => void refresh(), 0);
-    const refreshTimer = window.setInterval(() => void refresh(), 1000);
-    const smoothTimer = window.setInterval(() => setNow(Date.now()), 100);
+    let isMounted = true;
+
+    const loadData = async () => {
+      try {
+        const [nextAccounts, nextCodes] = await Promise.all([
+          window.authapp.listAccounts(),
+          window.authapp.getTotpCodes(),
+        ]);
+        if (isMounted) {
+          setAccounts(nextAccounts);
+          setCodes(nextCodes);
+          setError(false);
+        }
+      } catch (reason) {
+        if (import.meta.env.DEV) {
+          console.error(
+            'Account refresh failed:',
+            reason instanceof Error ? reason.message : 'unknown error',
+          );
+        }
+        if (isMounted) setError(true);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    const initialTimer = window.setTimeout(() => void loadData(), 0);
+    let lastSec = -1;
+
+    const timer = window.setInterval(() => {
+      const currentTime = Date.now();
+      const currentSec = Math.floor(currentTime / 1000);
+
+      setNow(currentTime);
+
+      if (lastSec !== -1 && currentSec !== lastSec) {
+        const periodRolled = accounts.some((acc) => currentSec % (acc.period || 30) === 0);
+        if (periodRolled || (accounts.length > 0 && codes.length === 0)) {
+          void window.authapp
+            .getTotpCodes()
+            .then((nextCodes) => {
+              if (isMounted) setCodes(nextCodes);
+            })
+            .catch(() => {});
+        }
+      }
+      lastSec = currentSec;
+    }, 1000);
+
+    const handleFocus = () => {
+      setNow(Date.now());
+      void window.authapp
+        .getTotpCodes()
+        .then((nextCodes) => {
+          if (isMounted) setCodes(nextCodes);
+        })
+        .catch(() => {});
+    };
+
+    window.addEventListener('focus', handleFocus);
 
     return () => {
-      window.clearTimeout(initial);
-      window.clearInterval(refreshTimer);
-      window.clearInterval(smoothTimer);
+      isMounted = false;
+      window.clearTimeout(initialTimer);
+      window.clearInterval(timer);
+      window.removeEventListener('focus', handleFocus);
     };
-  }, [refresh]);
+  }, [accounts, codes.length]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

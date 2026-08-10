@@ -28,6 +28,8 @@ protocol.registerSchemesAsPrivileged([
   },
 ]);
 
+app.commandLine.appendSwitch('js-flags', '--max-old-space-size=128');
+
 const isSmokeTest = process.env['AUTHAPP_SMOKE_TEST'] === '1';
 
 if (isSmokeTest) {
