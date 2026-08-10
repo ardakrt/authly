@@ -251,9 +251,9 @@ select {
 }
 
 .spotlight-liquid-glass {
-  background: rgba(12, 12, 16, 0.8) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  backdrop-filter: blur(12px) !important;
+  background: rgba(12, 12, 16, 0.75) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.4) !important;
+  backdrop-filter: blur(24px) saturate(1.4) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   box-shadow:
     0 24px 70px rgba(0, 0, 0, 0.7),
