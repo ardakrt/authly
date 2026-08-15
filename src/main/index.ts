@@ -33,6 +33,7 @@ app.commandLine.appendSwitch('js-flags', '--max-old-space-size=128');
 const isSmokeTest = process.env['AUTHAPP_SMOKE_TEST'] === '1';
 
 if (isSmokeTest) {
+  if (process.platform === 'linux') app.commandLine.appendSwitch('password-store', 'basic');
   const smokeUserData = join(app.getPath('temp'), `authapp-smoke-userdata-${process.pid}`);
   app.setPath('userData', smokeUserData);
 }
@@ -48,7 +49,7 @@ app.whenReady().then(async () => {
   if (!developmentUrl) registerLocalProtocol(join(__dirname, '../renderer'));
   const databasePath = isSmokeTest ? ':memory:' : join(app.getPath('userData'), 'authapp.db');
   localDatabase = new LocalDatabase(databasePath);
-  const vault = new ElectronSafeStorageVault();
+  const vault = new ElectronSafeStorageVault(isSmokeTest);
   if (isSmokeTest) {
     const encrypted = await vault.encryptSecret('runtime-smoke-value');
     const decrypted = await vault.decryptSecret(encrypted);

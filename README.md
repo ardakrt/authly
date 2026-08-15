@@ -1,6 +1,6 @@
 # Authly
 
-Authly is a Windows-first, offline desktop authenticator built with Electron, React, TypeScript, Vite, SQLite, and DPAPI OS-level encryption. It provides a secure, lightweight alternative to cloud-connected authenticator apps, keeping all multi-factor authentication (2FA/TOTP) secrets strictly local on your device.
+Authly is a cross-platform, offline desktop authenticator for Windows and Linux, built with Electron, React, TypeScript, Vite, and SQLite. It provides a secure, lightweight alternative to cloud-connected authenticator apps, keeping all multi-factor authentication (2FA/TOTP) secrets strictly local on your device.
 
 ## Features
 
@@ -8,7 +8,7 @@ Authly is a Windows-first, offline desktop authenticator built with Electron, Re
 - **Account Management**: Add accounts manually via secret keys, otpauth:// URIs, or scanning QR images.
 - **Master PIN Security**: Protect app startup and sensitive account data with an encrypted Master PIN lock.
 - **Encrypted Backup & Recovery**: Export and import full account backups protected with PBKDF2 + AES-256-GCM encryption.
-- **System Tray & Hotkeys**: Minimize to Windows system tray, quick clipboard copy with auto-clipboard clear after 15 seconds.
+- **System Tray & Hotkeys**: Minimize to the system tray, quick clipboard copy with auto-clipboard clear after 15 seconds.
 - **Theme & Appearance**: System, dark, and light visual modes built with custom UI tokens and clean accessibility.
 - **GitHub Release Update Check**: In-app one-click update checking against official GitHub releases.
 - **Isolated Renderer Security**: Strict IPC sandboxing, custom authapp:// protocol, zero raw Node/filesystem access in renderer.
@@ -18,13 +18,14 @@ Authly is a Windows-first, offline desktop authenticator built with Electron, Re
 Authly is designed with a local-first security architecture:
 
 - **Offline Operating Mode**: Secrets and database files never leave your computer.
-- **OS-Level Safe Storage**: TOTP secrets are encrypted using Windows Data Protection API (DPAPI).
+- **OS-Level Safe Storage**: TOTP secrets are encrypted using Windows DPAPI or a Linux desktop keyring (GNOME Keyring/KWallet).
 - **Auto-Clipboard Clean**: Copied 2FA codes are automatically wiped from system clipboard after 15 seconds.
 - **Zero Analytics**: No telemetry, tracking, or cloud backend services.
 
 ## Requirements
 
-- Windows 10/11 (x64)
+- Windows 10/11 (x64), or a modern x64 Linux distribution
+- Linux: an installed and unlocked GNOME Keyring or KWallet service
 - Node.js 20.19 or newer
 - npm 11 or newer
 
@@ -48,13 +49,13 @@ npm run dev
 
 Run full quality gates (formatting, linting, tests, strict TypeScript build, and visual/runtime smoke testing):
 
-```powershell
+```bash
 npm run verify
 ```
 
 Run individual quality checks:
 
-```powershell
+```bash
 npm run typecheck
 npm run lint
 npm test
@@ -66,15 +67,36 @@ npm run smoke
 
 Package the standalone Windows NSIS installer:
 
-```powershell
+```bash
 npm run package:win
 ```
 
-Installers and packaged outputs are generated in the `dist/` directory.
+Package the Linux AppImage and Debian package:
+
+```bash
+npm run package:linux
+```
+
+Installers and packaged outputs are generated in the `dist/` directory. The AppImage runs on most modern Linux distributions; the `.deb` package targets Debian, Ubuntu, and their derivatives.
+
+To run the AppImage:
+
+```bash
+chmod +x Authly-*.AppImage
+./Authly-*.AppImage
+```
+
+To install the Debian package:
+
+```bash
+sudo apt install ./Authly-*.deb
+```
 
 ## Local Data
 
-Runtime data (SQLite database, encrypted Vault secrets, application settings) is stored locally in Windows `%APPDATA%\authapp` and is excluded from Git. Do not commit personal backups, local database files, or master PIN hashes.
+Runtime data (SQLite database, encrypted Vault secrets, application settings) is stored in Electron's per-user application-data directory (`%APPDATA%\authapp` on Windows and usually `~/.config/authapp` on Linux) and is excluded from Git. Do not commit personal backups, local database files, or master PIN hashes.
+
+On Linux, Authly deliberately refuses to store new secrets when Electron falls back to its insecure `basic_text` backend. Start and unlock GNOME Keyring or KWallet before using the app.
 
 ## License
 

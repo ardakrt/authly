@@ -1,4 +1,4 @@
-import jsQR from 'jsQR';
+import jsQR from 'jsqr';
 import type { CreateAccountRequest } from '@shared/schemas/account';
 import { parseOtpMigrationUri } from './otpMigrationParser';
 
