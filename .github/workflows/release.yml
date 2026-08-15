@@ -36,6 +36,8 @@ jobs:
 
       - name: Verify project on Linux
         if: runner.os == 'Linux'
+        env:
+          ELECTRON_DISABLE_SANDBOX: '1'
         run: xvfb-run --auto-servernum npm run verify
 
       - name: Build Windows installer
