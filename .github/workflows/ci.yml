@@ -2,14 +2,14 @@ name: CI
 
 on:
   push:
-    branches: ['**']
+    branches: [master]
   pull_request:
 
 permissions:
   contents: read
 
 jobs:
-  verify:
+  verify-platform:
     strategy:
       fail-fast: false
       matrix:
@@ -30,3 +30,9 @@ jobs:
         env:
           ELECTRON_DISABLE_SANDBOX: '1'
         run: xvfb-run --auto-servernum npm run verify
+
+  verify:
+    needs: verify-platform
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Windows and Linux verification passed."
