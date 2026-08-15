@@ -2,7 +2,8 @@
   "name": "authapp",
   "version": "0.3.9",
   "private": true,
-  "description": "Windows-first, offline desktop authenticator",
+  "description": "Cross-platform, offline desktop authenticator for Windows and Linux",
+  "desktopName": "Authly",
   "author": "Arda Kartal <ardakartaskisisel@gmail.com>",
   "repository": {
     "type": "git",
@@ -27,7 +28,9 @@
     "smoke": "node scripts/smoke.mjs",
     "smoke:visual": "node scripts/smoke.mjs --visual",
     "verify": "npm run format:check && npm run lint && npm run test && npm run build && npm run smoke",
-    "package:win": "npm run verify && electron-builder --win nsis --x64"
+    "package:win": "npm run verify && electron-builder --win nsis --x64",
+    "package:linux": "npm run verify && electron-builder --linux AppImage deb --x64",
+    "package:linux:fast": "npm run build && electron-builder --linux AppImage deb --x64"
   },
   "dependencies": {
     "@fontsource/ibm-plex-sans": "5.3.0",
@@ -103,6 +106,31 @@
           ]
         }
       ]
+    },
+    "linux": {
+      "icon": "resources/icon.png",
+      "category": "Utility;Security",
+      "executableName": "authly",
+      "syncDesktopName": true,
+      "artifactName": "Authly-${version}-${arch}.${ext}",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "deb": {
+      "packageCategory": "utils",
+      "priority": "optional"
     },
     "nsis": {
       "oneClick": false,
