@@ -1,3 +1,5 @@
+<p align="center"><a href="README.tr.md" lang="tr">Türkçe</a> · <strong>English</strong></p>
+
 <p align="center">
   <img src=".github/readme/images/cover.png" alt="Authly — desktop verification codes and PIN lock" width="100%">
 </p>
