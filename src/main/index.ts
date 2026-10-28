@@ -69,7 +69,8 @@ app.whenReady().then(async () => {
   const lockService = new LockService(
     new SettingsRepository(localDatabase.connection),
     Date.now,
-    () => powerMonitor.getSystemIdleTime(),
+    // Isolated smoke has no physical user input; OS-idle behavior is covered by service tests.
+    () => (isSmokeTest ? 0 : powerMonitor.getSystemIdleTime()),
   );
   lockService.onStatusChange((status) => {
     for (const window of BrowserWindow.getAllWindows()) {

@@ -118,6 +118,7 @@ export async function createMainWindow(developmentUrl?: string): Promise<Browser
             try { await api.getTotpCodes(); } catch { lockedReadRejected = true; }
             if (!lockedReadRejected) throw new Error('Locked account read was accepted.');
             await api.verifyPin({ pin: '1357' });
+            if ((await api.getLockStatus()).isLocked) throw new Error('PIN smoke remained locked.');
             const readyDeadline = Date.now() + 3000;
             while (!document.querySelector('.account-card') && Date.now() < readyDeadline) {
               await new Promise((resolve) => setTimeout(resolve, 25));
