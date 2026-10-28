@@ -14,18 +14,24 @@ import {
 export class BackupService {
   constructor(private readonly accountService: AccountService) {}
 
-  async exportBackup(password: string): Promise<ExportBackupResult> {
+  async exportBackup(
+    password: string,
+    assertAccess: () => void = () => {},
+  ): Promise<ExportBackupResult> {
+    assertAccess();
     const saveDialogResult = await dialog.showSaveDialog({
       title: 'Şifreli Yedek Kaydet',
       defaultPath: `authapp-backup-${new Date().toISOString().slice(0, 10)}.authapp`,
       filters: [{ name: 'Authapp Backup (*.authapp)', extensions: ['authapp'] }],
     });
+    assertAccess();
 
     if (saveDialogResult.canceled || !saveDialogResult.filePath) {
       return { success: false, filePath: null, exportedCount: 0 };
     }
 
     const accounts = this.accountService.list();
+    const groups = this.accountService.listGroups();
     const exportItems = await Promise.all(
       accounts.map(async (account) => {
         const { secret } = await this.accountService.getTotpSecret(account.id);
@@ -43,7 +49,8 @@ export class BackupService {
     );
 
     const payload = backupPayloadSchema.parse({
-      version: 1,
+      version: 2,
+      groups,
       exportedAt: Date.now(),
       accounts: exportItems,
     });
@@ -76,7 +83,12 @@ export class BackupService {
       encryptedData: encrypted.toString('hex'),
     });
 
-    fs.writeFileSync(saveDialogResult.filePath, JSON.stringify(envelope, null, 2), 'utf8');
+    assertAccess();
+    const fileContent = JSON.stringify(envelope, null, 2);
+    if (Buffer.byteLength(fileContent, 'utf8') > MAX_BACKUP_FILE_BYTES) {
+      throw new Error('Yedek dosyası izin verilen boyut sınırını aşıyor.');
+    }
+    fs.writeFileSync(saveDialogResult.filePath, fileContent, 'utf8');
 
     return {
       success: true,
@@ -85,15 +97,20 @@ export class BackupService {
     };
   }
 
-  async importBackup(password: string): Promise<ImportBackupResult> {
+  async importBackup(
+    password: string,
+    assertAccess: () => void = () => {},
+  ): Promise<ImportBackupResult> {
+    assertAccess();
     const openDialogResult = await dialog.showOpenDialog({
       title: 'Yedek Dosyası Seç',
       filters: [{ name: 'Authapp Backup (*.authapp, *.json)', extensions: ['authapp', 'json'] }],
       properties: ['openFile'],
     });
+    assertAccess();
 
     if (openDialogResult.canceled || !openDialogResult.filePaths[0]) {
-      return { success: false, importedCount: 0, skippedCount: 0 };
+      return { success: false, importedCount: 0, skippedCount: 0, ungroupedCount: 0 };
     }
 
     const filePath = openDialogResult.filePaths[0];
@@ -141,31 +158,12 @@ export class BackupService {
 
     const payload = backupPayloadSchema.parse(payloadRaw);
 
-    let importedCount = 0;
-    let skippedCount = 0;
-
-    for (const item of payload.accounts) {
-      try {
-        await this.accountService.create({
-          issuer: item.issuer,
-          accountName: item.accountName,
-          secret: item.secret,
-          algorithm: item.algorithm,
-          digits: item.digits,
-          period: item.period,
-          favorite: item.favorite,
-          groupId: item.groupId,
-        });
-        importedCount++;
-      } catch {
-        skippedCount++;
-      }
-    }
+    const restored = await this.accountService.restoreBackup(payload, assertAccess);
 
     return {
       success: true,
-      importedCount,
-      skippedCount,
+      ...restored,
+      skippedCount: 0,
     };
   }
 }

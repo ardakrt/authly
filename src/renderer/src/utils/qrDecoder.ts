@@ -1,5 +1,6 @@
 import jsQR from 'jsqr';
 import type { CreateAccountRequest } from '@shared/schemas/account';
+import { base32SecretSchema } from '@shared/schemas/account';
 import { parseOtpMigrationUri } from './otpMigrationParser';
 
 export async function decodeQrFromImageData(imageData: ImageData): Promise<string | null> {
@@ -140,13 +141,13 @@ export async function processScannedQrContent(content: string): Promise<CreateAc
   }
 
   // 3. Raw secret key case (e.g. JBSWY3DPEHPK3PXP)
-  const cleanSecret = trimmed.replace(/\s+/g, '').toUpperCase();
-  if (/^[A-Z2-7=]{8,}$/.test(cleanSecret)) {
+  const parsedSecret = base32SecretSchema.safeParse(trimmed);
+  if (parsedSecret.success) {
     return [
       {
         issuer: 'Yeni Servis',
         accountName: 'Hesabım',
-        secret: cleanSecret,
+        secret: parsedSecret.data,
         algorithm: 'SHA1',
         digits: 6,
         period: 30,

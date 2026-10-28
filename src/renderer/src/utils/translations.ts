@@ -64,6 +64,10 @@ export const translations = {
     addFirstAccount: 'İlk Hesabını Ekle',
     copy: 'Kopyala',
     copied: 'Kopyalandı',
+    codeUnavailable: 'Kod üretilemedi',
+    invalidAccountInput: 'Kurulum anahtarını, algoritmayı, hane sayısını ve süreyi kontrol edin.',
+    accountImportFailed:
+      'Hesaplar içe aktarılamadı. Hiçbir hesap kaydedilmedi. Bilgileri kontrol edip yeniden deneyin.',
     secLeft: 'sn',
     deleteAccount: 'Hesabı sil',
     deleteConfirm: 'hesabı silinsin mi?',
@@ -106,6 +110,12 @@ export const translations = {
 
     // Lock Overlay
     lockTitle: 'Authly Kilitli',
+    lockStatusLoading: 'Kilit durumu kontrol ediliyor…',
+    lockStatusUnavailable: 'Kilit durumu alınamadı. Yeniden deneyin.',
+    legacyGroupsRestored:
+      'Eski yedekteki grup bilgisi bulunamadığı için bazı hesaplar gruplandırılmadan geri yüklendi.',
+    backupIncomplete:
+      'Yedek tamamen geri yüklenemedi. Atlanan hesaplar var; yedek dosyasını saklayın.',
     lockSubtitle: 'Devam etmek için Master PIN kodunuzu girin.',
     lockUnlock: 'Kilidi Aç',
     lockClear: 'Sil',
@@ -173,6 +183,9 @@ export const translations = {
     addFirstAccount: 'Add Your First Account',
     copy: 'Copy',
     copied: 'Copied',
+    codeUnavailable: 'Code unavailable',
+    invalidAccountInput: 'Check the setup key, algorithm, digit count and period.',
+    accountImportFailed: 'Import failed. No accounts were saved. Check the details and try again.',
     secLeft: 's',
     deleteAccount: 'Delete account',
     deleteConfirm: 'account be deleted?',
@@ -215,6 +228,12 @@ export const translations = {
 
     // Lock Overlay
     lockTitle: 'Authly Locked',
+    lockStatusLoading: 'Checking lock status…',
+    lockStatusUnavailable: 'Lock status could not be checked. Try again.',
+    legacyGroupsRestored:
+      'Some accounts were restored without a group because the older backup did not include group details.',
+    backupIncomplete:
+      'The backup was not fully restored. Some accounts were skipped; keep the backup file.',
     lockSubtitle: 'Enter your Master PIN code to continue.',
     lockUnlock: 'Unlock',
     lockClear: 'Clear',

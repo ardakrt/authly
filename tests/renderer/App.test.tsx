@@ -19,7 +19,7 @@ describe('App shell and user interface', () => {
   it('uses the packaged Authly logo in the application header', async () => {
     renderApp();
 
-    const brandButton = screen.getByRole('button', { name: 'Authly Ana Sayfası' });
+    const brandButton = await screen.findByRole('button', { name: 'Authly Ana Sayfası' });
     expect(brandButton.querySelector('img')).toHaveAttribute(
       'src',
       expect.stringContaining('logo.png'),
@@ -55,7 +55,7 @@ describe('App shell and user interface', () => {
       </MemoryRouter>,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Koyu' }));
+    await user.click(await screen.findByRole('button', { name: 'Koyu' }));
     expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
     expect(screen.getByRole('button', { name: 'Koyu' })).toHaveAttribute('aria-pressed', 'true');
   });

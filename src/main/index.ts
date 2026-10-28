@@ -1,7 +1,8 @@
 import { join } from 'node:path';
-import { app, BrowserWindow, protocol } from 'electron';
+import { app, BrowserWindow, protocol, powerMonitor } from 'electron';
 import { LocalDatabase } from './database/LocalDatabase';
 import { AccountRepository } from './database/repositories/AccountRepository';
+import { GroupRepository } from './database/repositories/GroupRepository';
 import { SettingsRepository } from './database/repositories/SettingsRepository';
 import { registerAppHandlers, removeAppHandlers } from './ipc/registerAppHandlers';
 import { ElectronSafeStorageVault } from './security/ElectronSafeStorageVault';
@@ -14,7 +15,7 @@ import { LockService } from './services/LockService';
 import { UpdateService } from './services/UpdateService';
 import { createMainWindow } from './window/createMainWindow';
 import { TrayService } from './window/TrayService';
-import { UPDATE_STATE_EVENT } from '@shared/ipc/channels';
+import { UPDATE_STATE_EVENT, LOCK_STATUS_EVENT } from '@shared/ipc/channels';
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -44,6 +45,7 @@ if (!hasSingleInstanceLock) app.quit();
 const developmentUrl = process.env['ELECTRON_RENDERER_URL'];
 let localDatabase: LocalDatabase | undefined;
 let trayService: TrayService | undefined;
+let lockTimer: ReturnType<typeof setInterval> | undefined;
 
 app.whenReady().then(async () => {
   if (!developmentUrl) registerLocalProtocol(join(__dirname, '../renderer'));
@@ -60,10 +62,25 @@ app.whenReady().then(async () => {
     new AccountRepository(localDatabase.connection),
     vault,
     totpService,
+    new GroupRepository(localDatabase.connection),
   );
   const settingsService = new SettingsService(new SettingsRepository(localDatabase.connection));
   const backupService = new BackupService(accountService);
-  const lockService = new LockService(new SettingsRepository(localDatabase.connection));
+  const lockService = new LockService(
+    new SettingsRepository(localDatabase.connection),
+    Date.now,
+    // Isolated smoke has no physical user input; OS-idle behavior is covered by service tests.
+    () => (isSmokeTest ? 0 : powerMonitor.getSystemIdleTime()),
+  );
+  lockService.onStatusChange((status) => {
+    for (const window of BrowserWindow.getAllWindows()) {
+      if (!window.isDestroyed()) window.webContents.send(LOCK_STATUS_EVENT, status);
+    }
+  });
+  lockTimer = setInterval(() => lockService.checkAutoLock(), 1000);
+  lockTimer.unref();
+  powerMonitor.on('lock-screen', () => lockService.lockApp());
+  powerMonitor.on('suspend', () => lockService.lockApp());
   const updateService = new UpdateService({
     beforeInstall: () => trayService?.setQuitting(true),
   });
@@ -103,6 +120,7 @@ app.on('second-instance', () => {
 });
 
 app.on('window-all-closed', () => {
+  if (lockTimer) clearInterval(lockTimer);
   removeAppHandlers();
   trayService?.destroy();
   localDatabase?.close();

@@ -13,6 +13,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { CreateAccountRequest } from '@shared/schemas/account';
+import { createAccountRequestSchema } from '@shared/schemas/account';
 import { PageHeading } from '../components/PageHeading';
 import { decodeQrFromImageFile, processScannedQrContent } from '../utils/qrDecoder';
 import { useLanguage } from '../hooks/useLanguage';
@@ -167,15 +168,16 @@ export function AddAccountPage(): React.JSX.Element {
       setError('Lütfen bir hesap adı girin.');
       return;
     }
-    if (!form.secret.trim()) {
-      setError('Lütfen geçerli bir kurulum anahtarı girin.');
+    const parsed = createAccountRequestSchema.safeParse(form);
+    if (!parsed.success) {
+      setError(t('invalidAccountInput'));
       return;
     }
 
     setSaving(true);
     setError('');
     try {
-      await window.authapp.createAccount(form);
+      await window.authapp.createAccount(parsed.data);
       navigate('/');
     } catch {
       setError('Hesap kaydedilemedi. Kurulum anahtarını kontrol edin.');
@@ -194,12 +196,10 @@ export function AddAccountPage(): React.JSX.Element {
     setSaving(true);
     setError('');
     try {
-      for (const account of selectedList) {
-        await window.authapp.createAccount(account);
-      }
+      await window.authapp.importAccounts({ accounts: selectedList });
       navigate('/');
     } catch {
-      setError('Hesaplar içe aktarılırken bir hata oluştu.');
+      setError(t('accountImportFailed'));
       setSaving(false);
     }
   }

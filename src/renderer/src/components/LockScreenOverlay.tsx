@@ -5,8 +5,10 @@ import { useLanguage } from '../hooks/useLanguage';
 
 export function LockScreenOverlay({
   onUnlock,
+  onStatusChange,
 }: {
   onUnlock?: () => void;
+  onStatusChange?: (status: LockStatus) => void;
 }): React.JSX.Element | null {
   const [status, setStatus] = useState<LockStatus | null>(null);
   const [pin, setPin] = useState('');
@@ -18,20 +20,38 @@ export function LockScreenOverlay({
     try {
       const next = await window.authapp.getLockStatus();
       setStatus(next);
+      onStatusChange?.(next);
     } catch {
-      // ignore status check error
+      setError(t('lockStatusUnavailable'));
     }
-  }, []);
+  }, [onStatusChange, t]);
 
   useEffect(() => {
     let isMounted = true;
-    void window.authapp.getLockStatus().then((next) => {
-      if (isMounted) setStatus(next);
+    let receivedEvent = false;
+    const unsubscribe = window.authapp.onLockStatus((next) => {
+      receivedEvent = true;
+      if (isMounted) {
+        setStatus(next);
+        onStatusChange?.(next);
+      }
     });
+    void window.authapp
+      .getLockStatus()
+      .then((next) => {
+        if (isMounted && !receivedEvent) {
+          setStatus(next);
+          onStatusChange?.(next);
+        }
+      })
+      .catch(() => {
+        if (isMounted) setError(t('lockStatusUnavailable'));
+      });
     return () => {
       isMounted = false;
+      unsubscribe();
     };
-  }, []);
+  }, [onStatusChange, t]);
 
   const handleVerify = useCallback(
     async (pinToTest: string) => {
@@ -88,7 +108,20 @@ export function LockScreenOverlay({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [status?.isLocked, pin, addDigit, backspace, handleVerify]);
 
-  if (!status?.isLocked) return null;
+  if (!status)
+    return (
+      <div className="lock-overlay" role="status">
+        <div className="lock-card">
+          <p>{error || t('lockStatusLoading')}</p>
+          {error && (
+            <button type="button" onClick={() => void checkStatus()}>
+              {t('retryUpdate')}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  if (!status.isLocked) return null;
 
   return (
     <div className="lock-overlay" role="dialog" aria-modal="true" aria-label={t('lockTitle')}>

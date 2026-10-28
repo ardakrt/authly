@@ -36,6 +36,7 @@ describe('BackupService', () => {
           groupId: null,
         },
       ]),
+      listGroups: vi.fn().mockReturnValue([]),
       getTotpSecret: vi.fn().mockResolvedValue({
         secret: 'JBSWY3DPEHPK3PXP',
         algorithm: 'SHA1',

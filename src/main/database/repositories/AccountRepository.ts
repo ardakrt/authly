@@ -83,6 +83,16 @@ export class AccountRepository {
       );
   }
 
+  createMany(records: AccountRecord[]): void {
+    this.database.transaction(() => {
+      for (const record of records) this.create(record);
+    })();
+  }
+
+  transaction<T>(operation: () => T): T {
+    return this.database.transaction(operation)();
+  }
+
   update(record: AccountRecord): void {
     const result = this.database
       .prepare(

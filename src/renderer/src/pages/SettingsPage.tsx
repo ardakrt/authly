@@ -144,13 +144,15 @@ export function SettingsPage(): React.JSX.Element {
     setStatusMsg(null);
     try {
       const result = await window.authapp.importBackup({ password: importPassword });
-      if (result.success) {
+      if (result.success && result.skippedCount === 0) {
         setStatusMsg({
           type: 'success',
-          message: `${result.importedCount} ${t('importSuccess')}`,
+          message: `${result.importedCount} ${t('importSuccess')}${result.ungroupedCount ? ` ${t('legacyGroupsRestored')}` : ''}`,
         });
         setShowImportForm(false);
         setImportPassword('');
+      } else if (result.skippedCount > 0) {
+        setStatusMsg({ type: 'error', message: t('backupIncomplete') });
       }
     } catch (err) {
       setStatusMsg({

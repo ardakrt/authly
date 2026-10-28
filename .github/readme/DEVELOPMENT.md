@@ -40,6 +40,22 @@ npm run smoke:visual
 
 `smoke:visual` additionally captures the runtime smoke views into a temporary directory reported by the script. Passing static checks alone does not prove packaged Windows/Linux behavior.
 
+The Electron smoke also exercises the real sandboxed preload and main-process account handlers with an isolated in-memory database. It verifies encrypted batch import, TOTP generation, invalid-secret rejection, database rollback after a later insert fails, and account cleanup. It does not access the system clipboard or the user's vault.
+
+### Account input and import boundaries
+
+- Creation, secret updates and backup payloads share canonical Base32 validation. Spaces, hyphens, case and valid padding are normalized; invalid characters, padding and trailing bits are rejected before storage.
+- A legacy unreadable account remains visible with an unavailable-code state. Its failure does not prevent healthy accounts from generating or copying codes.
+- Google Authenticator migration QR input is bounded to 128 KiB and 100 accounts. Truncated protobuf data, overflowing lengths, unknown algorithms/digit counts and non-TOTP accounts are rejected before the confirmation preview.
+- The named `importAccounts` bridge validates both sides of IPC, checks the renderer origin and PIN lock, and rechecks the lock after encryption. Every selected account is inserted in one SQLite transaction; any failure leaves the batch unsaved.
+- These changes do not migrate the database or delete existing accounts. A malformed legacy secret must be replaced from the original provider or the affected account removed.
+
+### Lock lifecycle and backup recovery
+
+`LockService` owns a five-minute inactivity deadline and a session generation. Main checks the deadline every second, incorporates OS idle time, and locks on system lock or suspend. The renderer reports activity through a narrow validated method and subscribes to validated status events. Sensitive views are unmounted while locked and remounted after PIN verification; pending operations recheck their captured generation before delivering codes or writing data.
+
+Backup payload version 2 includes groups and restores all groups/accounts in one transaction after encryption succeeds. Version 1 remains supported; missing legacy group metadata produces an explicit ungrouped-account notice. Failed encryption, expired sessions or database errors abort the restore instead of returning partial success. The AES-GCM envelope and PBKDF2 settings are unchanged, and version 2 payloads require Authly 0.3.11 or newer to import.
+
 ## Packaging
 
 Windows NSIS installer:

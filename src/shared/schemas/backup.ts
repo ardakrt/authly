@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { totpAlgorithmSchema } from './account';
+import { base32SecretSchema, totpAlgorithmSchema } from './account';
 
 export const MIN_BACKUP_PASSWORD_LENGTH = 12;
 export const MIN_BACKUP_KDF_ITERATIONS = 100_000;
@@ -39,13 +39,14 @@ export const importBackupResultSchema = z
     success: z.boolean(),
     importedCount: z.number().int().nonnegative(),
     skippedCount: z.number().int().nonnegative(),
+    ungroupedCount: z.number().int().nonnegative().default(0),
   })
   .strict();
 
 export const backupAccountItemSchema = z.object({
   issuer: z.string().min(1).max(120),
   accountName: z.string().min(1).max(240),
-  secret: z.string().min(8).max(4096),
+  secret: base32SecretSchema,
   algorithm: totpAlgorithmSchema.default('SHA1'),
   digits: z.number().int().min(6).max(10).default(6),
   period: z.number().int().min(5).max(300).default(30),
@@ -53,13 +54,33 @@ export const backupAccountItemSchema = z.object({
   groupId: z.string().uuid().nullable().default(null),
 });
 
-export const backupPayloadSchema = z
+export const backupGroupSchema = z
+  .object({
+    id: z.string().uuid(),
+    name: z.string().trim().min(1).max(120),
+    sortOrder: z.number().int().nonnegative(),
+    createdAt: z.number().int().positive(),
+    updatedAt: z.number().int().positive(),
+  })
+  .strict();
+
+const legacyBackupPayloadSchema = z
   .object({
     version: z.literal(1),
     exportedAt: z.number().int().positive(),
     accounts: z.array(backupAccountItemSchema).max(MAX_BACKUP_ACCOUNTS),
   })
   .strict();
+
+export const backupPayloadSchema = z.discriminatedUnion('version', [
+  legacyBackupPayloadSchema,
+  legacyBackupPayloadSchema
+    .extend({
+      version: z.literal(2),
+      groups: z.array(backupGroupSchema).max(MAX_BACKUP_ACCOUNTS),
+    })
+    .strict(),
+]);
 
 export const backupFileEnvelopeSchema = z
   .object({

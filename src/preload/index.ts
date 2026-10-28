@@ -5,13 +5,15 @@ import {
   updateStateSchema,
 } from '@shared/schemas/update';
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
-import { IPC_CHANNELS, UPDATE_STATE_EVENT } from '@shared/ipc/channels';
+import { IPC_CHANNELS, UPDATE_STATE_EVENT, LOCK_STATUS_EVENT } from '@shared/ipc/channels';
 import {
   accountDtoSchema,
   createAccountRequestSchema,
+  importAccountsRequestSchema,
   deleteAccountRequestSchema,
   updateAccountRequestSchema,
   type CreateAccountRequest,
+  type ImportAccountsRequest,
   type DeleteAccountRequest,
   type UpdateAccountRequest,
 } from '@shared/schemas/account';
@@ -38,6 +40,7 @@ import {
 } from '@shared/schemas/settings';
 import {
   lockStatusSchema,
+  lockActivityRequestSchema,
   removePinRequestSchema,
   setPinRequestSchema,
   verifyPinRequestSchema,
@@ -58,6 +61,15 @@ const api: AuthappApi = Object.freeze({
         createAccountRequestSchema.parse(request),
       ),
     ),
+  importAccounts: async (request: ImportAccountsRequest) =>
+    accountDtoSchema
+      .array()
+      .parse(
+        await ipcRenderer.invoke(
+          IPC_CHANNELS.importAccounts,
+          importAccountsRequestSchema.parse(request),
+        ),
+      ),
   updateAccount: async (request: UpdateAccountRequest) =>
     accountDtoSchema.parse(
       await ipcRenderer.invoke(
@@ -114,6 +126,16 @@ const api: AuthappApi = Object.freeze({
   },
   lockApp: async () => {
     await ipcRenderer.invoke(IPC_CHANNELS.lockApp, {});
+  },
+  recordActivity: async () => {
+    await ipcRenderer.invoke(IPC_CHANNELS.recordActivity, lockActivityRequestSchema.parse({}));
+  },
+  onLockStatus: (listener: Parameters<AuthappApi['onLockStatus']>[0]) => {
+    const handler = (_event: IpcRendererEvent, rawStatus: unknown) => {
+      listener(lockStatusSchema.parse(rawStatus));
+    };
+    ipcRenderer.on(LOCK_STATUS_EVENT, handler);
+    return () => ipcRenderer.removeListener(LOCK_STATUS_EVENT, handler);
   },
   checkUpdate: async () =>
     updateInfoSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.checkUpdate, {})),
