@@ -66,6 +66,8 @@ Object.defineProperty(window, 'authapp', {
     setPin: vi.fn().mockResolvedValue(undefined),
     removePin: vi.fn().mockResolvedValue(undefined),
     lockApp: vi.fn().mockResolvedValue(undefined),
+    recordActivity: vi.fn().mockResolvedValue(undefined),
+    onLockStatus: vi.fn().mockReturnValue(() => {}),
     checkUpdate: vi.fn().mockResolvedValue({
       hasUpdate: false,
       currentVersion: '0.3.5',

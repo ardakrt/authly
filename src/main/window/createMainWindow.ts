@@ -111,6 +111,19 @@ export async function createMainWindow(developmentUrl?: string): Promise<Browser
             if (!rollbackRejected || (await api.listAccounts()).length !== 2) {
               throw new Error('Atomic account import failed.');
             }
+            await api.setPin({ pin: '1357' });
+            await api.lockApp();
+            if (!(await api.getLockStatus()).isLocked) throw new Error('Runtime lock failed.');
+            let lockedReadRejected = false;
+            try { await api.getTotpCodes(); } catch { lockedReadRejected = true; }
+            if (!lockedReadRejected) throw new Error('Locked account read was accepted.');
+            await api.verifyPin({ pin: '1357' });
+            const readyDeadline = Date.now() + 3000;
+            while (!document.querySelector('.account-card') && Date.now() < readyDeadline) {
+              await new Promise((resolve) => setTimeout(resolve, 25));
+            }
+            if (!document.querySelector('.account-card')) throw new Error('Account view did not reload after unlock.');
+            await api.removePin({ currentPin: '1357' });
             for (const account of imported) await api.deleteAccount({ id: account.id });
             const single = await api.createAccount(fixture);
             await api.deleteAccount({ id: single.id });

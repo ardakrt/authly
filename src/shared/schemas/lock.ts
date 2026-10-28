@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+export const lockActivityRequestSchema = z.object({}).strict();
+
 export const lockStatusSchema = z
   .object({
     isPinSet: z.boolean(),

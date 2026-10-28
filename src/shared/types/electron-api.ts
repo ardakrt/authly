@@ -41,6 +41,8 @@ export interface AuthappApi {
   setPin: (request: SetPinRequest) => Promise<void>;
   removePin: (request: RemovePinRequest) => Promise<void>;
   lockApp: () => Promise<void>;
+  recordActivity: () => Promise<void>;
+  onLockStatus: (listener: (status: LockStatus) => void) => () => void;
   checkUpdate: () => Promise<UpdateInfo>;
   getUpdateState: () => Promise<UpdateState>;
   installUpdate: () => Promise<void>;

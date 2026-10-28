@@ -15,6 +15,8 @@ import { AccountRepository, type AccountRecord } from '../database/repositories/
 import type { VaultService } from '../security/VaultService';
 import type { TotpCode } from '@shared/schemas/totp';
 import type { TotpService } from './TotpService';
+import { GroupRepository, type GroupRecord } from '../database/repositories/GroupRepository';
+import { backupPayloadSchema, type BackupPayload } from '@shared/schemas/backup';
 
 function toDto(record: AccountRecord): AccountDto {
   return accountDtoSchema.parse({
@@ -37,6 +39,7 @@ export class AccountService {
     private readonly repository: AccountRepository,
     private readonly vault: VaultService,
     private readonly totpService?: TotpService,
+    private readonly groupRepository?: GroupRepository,
   ) {}
 
   list(): AccountDto[] {
@@ -77,7 +80,10 @@ export class AccountService {
     };
   }
 
-  async create(input: CreateAccountRequest): Promise<AccountDto> {
+  async create(
+    input: CreateAccountRequest,
+    assertCanWrite: () => void = () => {},
+  ): Promise<AccountDto> {
     input = createAccountRequestSchema.parse(input);
     const now = Date.now();
     const record: AccountRecord = {
@@ -94,8 +100,10 @@ export class AccountService {
       createdAt: now,
       updatedAt: now,
     };
+    const dto = toDto(record);
+    assertCanWrite();
     this.repository.create(record);
-    return toDto(record);
+    return dto;
   }
 
   async importAccounts(
@@ -122,7 +130,74 @@ export class AccountService {
     return dtos;
   }
 
-  async update(input: UpdateAccountRequest): Promise<AccountDto> {
+  listGroups(): GroupRecord[] {
+    return this.groupRepository?.list() ?? [];
+  }
+
+  async restoreBackup(
+    input: BackupPayload,
+    assertCanWrite: () => void = () => {},
+  ): Promise<{ importedCount: number; ungroupedCount: number }> {
+    const payload = backupPayloadSchema.parse(input);
+    const existingGroups = this.listGroups();
+    const groupsToCreate: GroupRecord[] = [];
+    const groupMap = new Map<string, string>();
+    if (payload.version === 2) {
+      for (const group of payload.groups) {
+        if (groupMap.has(group.id)) throw new Error('Yedekte yinelenen grup bilgisi var.');
+        const existing = [...existingGroups, ...groupsToCreate].find(
+          (item) => item.name === group.name,
+        );
+        const restored = existing ?? {
+          ...group,
+          id: randomUUID(),
+          sortOrder: existingGroups.length + groupsToCreate.length,
+        };
+        groupMap.set(group.id, restored.id);
+        if (!existing) groupsToCreate.push(restored);
+      }
+    }
+    if (groupsToCreate.length && !this.groupRepository)
+      throw new Error('Grup deposu kullanılamıyor.');
+    let ungroupedCount = 0;
+    const sortOrder = this.repository.list().length;
+    const now = Date.now();
+    const records: AccountRecord[] = [];
+    for (const [index, account] of payload.accounts.entries()) {
+      const { secret, ...metadata } = account;
+      let groupId = account.groupId;
+      if (groupId) {
+        const mapped = groupMap.get(groupId);
+        if (payload.version === 2 && !mapped) throw new Error('Yedekte eksik grup bilgisi var.');
+        if (payload.version === 1 && !existingGroups.some((item) => item.id === groupId)) {
+          groupId = null;
+          ungroupedCount++;
+        } else if (mapped) groupId = mapped;
+      }
+      records.push({
+        ...metadata,
+        groupId,
+        id: randomUUID(),
+        encryptedSecret: await this.vault.encryptSecret(secret),
+        sortOrder: sortOrder + index,
+        createdAt: now,
+        updatedAt: now,
+      });
+      assertCanWrite();
+    }
+    records.forEach(toDto);
+    assertCanWrite();
+    this.repository.transaction(() => {
+      for (const group of groupsToCreate) this.groupRepository!.create(group);
+      for (const record of records) this.repository.create(record);
+    });
+    return { importedCount: records.length, ungroupedCount };
+  }
+
+  async update(
+    input: UpdateAccountRequest,
+    assertCanWrite: () => void = () => {},
+  ): Promise<AccountDto> {
     input = updateAccountRequestSchema.parse(input);
     const current = this.repository.getById(input.id);
     if (!current) throw new Error('Account not found.');
@@ -140,8 +215,10 @@ export class AccountService {
         : current.encryptedSecret,
       updatedAt: Date.now(),
     };
+    const dto = toDto(updated);
+    assertCanWrite();
     this.repository.update(updated);
-    return toDto(updated);
+    return dto;
   }
 
   delete(id: string): void {

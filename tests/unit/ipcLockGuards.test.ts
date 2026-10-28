@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { IPC_CHANNELS } from '../../src/shared/ipc/channels';
 import { clipboard } from 'electron';
+import { LockService } from '../../src/main/services/LockService';
+import type { SettingsRepository } from '../../src/main/database/repositories/SettingsRepository';
 
 type InvokeHandler = (
   event: { senderFrame?: { url: string } },
@@ -33,7 +35,57 @@ vi.mock('electron', () => ({
 
 import { registerAppHandlers, removeAppHandlers } from '../../src/main/ipc/registerAppHandlers';
 
+function lockMock(assertNotLocked = vi.fn()) {
+  return {
+    assertNotLocked,
+    captureSession: () => {
+      assertNotLocked();
+      return assertNotLocked;
+    },
+  };
+}
+
 describe('sensitive IPC lock guards', () => {
+  it.each([IPC_CHANNELS.copyTotp, IPC_CHANNELS.getTotpCodes])(
+    'revokes pending %s work when the lock session changes',
+    async (channel) => {
+      const store = new Map<string, string>();
+      const repository = {
+        get: (key: string) => store.get(key) ?? null,
+        set: (key: string, value: string) => store.set(key, value),
+        delete: (key: string) => store.delete(key),
+      } as unknown as SettingsRepository;
+      const lock = new LockService(repository);
+      lock.setPin('1234');
+      let finish!: (value: unknown) => void;
+      const pending = new Promise((resolve) => {
+        finish = resolve;
+      });
+      const services = [
+        { getTotpCode: () => pending, getTotpCodes: () => pending },
+        {},
+        {},
+        {},
+        lock,
+        {},
+      ] as unknown as Parameters<typeof registerAppHandlers>;
+      registerAppHandlers(...services);
+      const request =
+        channel === IPC_CHANNELS.copyTotp
+          ? { accountId: 'a4ff59c6-2df2-4136-86ba-78bd57a617d8' }
+          : {};
+      const result = handlers.get(channel)!(
+        { senderFrame: { url: 'authapp://app/index.html' } },
+        request,
+      );
+      lock.lockApp();
+      lock.verifyPin('1234');
+      finish(channel === IPC_CHANNELS.copyTotp ? { code: '000000' } : []);
+      await expect(result).rejects.toThrow();
+      expect(clipboard.writeText).not.toHaveBeenCalled();
+    },
+  );
+
   const importRequest = {
     accounts: [{ issuer: 'Fixture', accountName: 'fixture', secret: 'JBSWY3DPEHPK3PXP' }],
   };
@@ -51,7 +103,7 @@ describe('sensitive IPC lock guards', () => {
       {},
       {},
       {},
-      { assertNotLocked },
+      lockMock(assertNotLocked),
       {},
     ] as unknown as Parameters<typeof registerAppHandlers>;
     registerAppHandlers(...services);
@@ -82,7 +134,7 @@ describe('sensitive IPC lock guards', () => {
       {},
       {},
       {},
-      { assertNotLocked },
+      lockMock(assertNotLocked),
       {},
     ] as unknown as Parameters<typeof registerAppHandlers>;
     registerAppHandlers(...services);
@@ -109,7 +161,7 @@ describe('sensitive IPC lock guards', () => {
         {},
         {},
         {},
-        { assertNotLocked: vi.fn() },
+        lockMock(),
         {},
       ] as unknown as Parameters<typeof registerAppHandlers>;
       registerAppHandlers(...services);
@@ -135,7 +187,7 @@ describe('sensitive IPC lock guards', () => {
       {},
       { exportBackup: vi.fn(), importBackup: vi.fn() },
       {},
-      { assertNotLocked },
+      lockMock(assertNotLocked),
       {},
     ] as unknown as Parameters<typeof registerAppHandlers>;
 

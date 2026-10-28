@@ -81,6 +81,8 @@ try {
           onUpdateState: () => () => {},
           copyTotp: async () => {},
           lockApp: async () => {},
+          recordActivity: async () => {},
+          onLockStatus: () => () => {},
         };
       },
       { theme, locked },

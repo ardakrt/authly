@@ -11,25 +11,73 @@ const MAX_LOCKOUT_MS = 15 * 60_000;
 
 export class LockService {
   private isLocked: boolean;
+  private lastActivity: number;
+  private epoch = 0;
+  private readonly listeners = new Set<(status: LockStatus) => void>();
 
   constructor(
     private readonly repository: SettingsRepository,
     private readonly now: () => number = Date.now,
+    private readonly systemIdleSeconds: () => number = () => 0,
   ) {
     const hasPin = Boolean(this.repository.get('pinHash'));
     this.isLocked = hasPin;
+    this.lastActivity = this.now();
   }
 
   getStatus(): LockStatus {
+    this.checkAutoLock();
+    return this.snapshot();
+  }
+
+  private snapshot(): LockStatus {
     const pinHash = this.repository.get('pinHash');
     const timeoutRaw = this.repository.get('autoLockTimeout') ?? '5';
-    const autoLockTimeout = parseInt(timeoutRaw, 10) || 5;
+    const parsedTimeout = Number(timeoutRaw);
+    const autoLockTimeout =
+      Number.isInteger(parsedTimeout) && parsedTimeout >= 0 ? parsedTimeout : 5;
 
     return lockStatusSchema.parse({
       isPinSet: Boolean(pinHash),
       isLocked: this.isLocked && Boolean(pinHash),
       autoLockTimeout,
     });
+  }
+
+  onStatusChange(listener: (status: LockStatus) => void): () => void {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  recordActivity(): void {
+    this.assertNotLocked();
+    this.lastActivity = this.now();
+  }
+
+  checkAutoLock(): void {
+    const status = this.snapshot();
+    if (
+      status.isPinSet &&
+      !status.isLocked &&
+      status.autoLockTimeout > 0 &&
+      Math.max(this.now() - this.lastActivity, this.systemIdleSeconds() * 1000) >=
+        status.autoLockTimeout * 60_000
+    )
+      this.lockApp();
+  }
+
+  captureSession(): () => void {
+    this.assertNotLocked();
+    const epoch = this.epoch;
+    return () => {
+      this.assertNotLocked();
+      if (this.epoch !== epoch) throw new Error('Kilit oturumu değişti. İşlemi yeniden başlatın.');
+    };
+  }
+
+  private emitStatus(): void {
+    const status = this.snapshot();
+    for (const listener of this.listeners) listener(status);
   }
 
   assertNotLocked(): void {
@@ -82,6 +130,8 @@ export class LockService {
     this.clearFailedAttempts();
     if (iterations < CURRENT_PIN_ITERATIONS) this.storePin(pin);
     this.isLocked = false;
+    this.lastActivity = this.now();
+    this.emitStatus();
     return true;
   }
 
@@ -97,6 +147,9 @@ export class LockService {
     this.storePin(pin);
     this.clearFailedAttempts();
     this.isLocked = false;
+    this.lastActivity = this.now();
+    this.epoch++;
+    this.emitStatus();
   }
 
   removePin(currentPin: string): void {
@@ -106,11 +159,15 @@ export class LockService {
     this.repository.delete('pinIterations');
     this.clearFailedAttempts();
     this.isLocked = false;
+    this.epoch++;
+    this.emitStatus();
   }
 
   lockApp(): void {
-    if (this.repository.get('pinHash')) {
+    if (this.repository.get('pinHash') && !this.isLocked) {
       this.isLocked = true;
+      this.epoch++;
+      this.emitStatus();
     }
   }
 

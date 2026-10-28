@@ -110,6 +110,12 @@ export const translations = {
 
     // Lock Overlay
     lockTitle: 'Authly Kilitli',
+    lockStatusLoading: 'Kilit durumu kontrol ediliyor…',
+    lockStatusUnavailable: 'Kilit durumu alınamadı. Yeniden deneyin.',
+    legacyGroupsRestored:
+      'Eski yedekteki grup bilgisi bulunamadığı için bazı hesaplar gruplandırılmadan geri yüklendi.',
+    backupIncomplete:
+      'Yedek tamamen geri yüklenemedi. Atlanan hesaplar var; yedek dosyasını saklayın.',
     lockSubtitle: 'Devam etmek için Master PIN kodunuzu girin.',
     lockUnlock: 'Kilidi Aç',
     lockClear: 'Sil',
@@ -222,6 +228,12 @@ export const translations = {
 
     // Lock Overlay
     lockTitle: 'Authly Locked',
+    lockStatusLoading: 'Checking lock status…',
+    lockStatusUnavailable: 'Lock status could not be checked. Try again.',
+    legacyGroupsRestored:
+      'Some accounts were restored without a group because the older backup did not include group details.',
+    backupIncomplete:
+      'The backup was not fully restored. Some accounts were skipped; keep the backup file.',
     lockSubtitle: 'Enter your Master PIN code to continue.',
     lockUnlock: 'Unlock',
     lockClear: 'Clear',

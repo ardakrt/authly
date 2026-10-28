@@ -39,6 +39,7 @@ export const importBackupResultSchema = z
     success: z.boolean(),
     importedCount: z.number().int().nonnegative(),
     skippedCount: z.number().int().nonnegative(),
+    ungroupedCount: z.number().int().nonnegative().default(0),
   })
   .strict();
 
@@ -53,13 +54,33 @@ export const backupAccountItemSchema = z.object({
   groupId: z.string().uuid().nullable().default(null),
 });
 
-export const backupPayloadSchema = z
+export const backupGroupSchema = z
+  .object({
+    id: z.string().uuid(),
+    name: z.string().trim().min(1).max(120),
+    sortOrder: z.number().int().nonnegative(),
+    createdAt: z.number().int().positive(),
+    updatedAt: z.number().int().positive(),
+  })
+  .strict();
+
+const legacyBackupPayloadSchema = z
   .object({
     version: z.literal(1),
     exportedAt: z.number().int().positive(),
     accounts: z.array(backupAccountItemSchema).max(MAX_BACKUP_ACCOUNTS),
   })
   .strict();
+
+export const backupPayloadSchema = z.discriminatedUnion('version', [
+  legacyBackupPayloadSchema,
+  legacyBackupPayloadSchema
+    .extend({
+      version: z.literal(2),
+      groups: z.array(backupGroupSchema).max(MAX_BACKUP_ACCOUNTS),
+    })
+    .strict(),
+]);
 
 export const backupFileEnvelopeSchema = z
   .object({

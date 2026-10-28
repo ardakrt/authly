@@ -50,6 +50,12 @@ The Electron smoke also exercises the real sandboxed preload and main-process ac
 - The named `importAccounts` bridge validates both sides of IPC, checks the renderer origin and PIN lock, and rechecks the lock after encryption. Every selected account is inserted in one SQLite transaction; any failure leaves the batch unsaved.
 - These changes do not migrate the database or delete existing accounts. A malformed legacy secret must be replaced from the original provider or the affected account removed.
 
+### Lock lifecycle and backup recovery
+
+`LockService` owns a five-minute inactivity deadline and a session generation. Main checks the deadline every second, incorporates OS idle time, and locks on system lock or suspend. The renderer reports activity through a narrow validated method and subscribes to validated status events. Sensitive views are unmounted while locked and remounted after PIN verification; pending operations recheck their captured generation before delivering codes or writing data.
+
+Backup payload version 2 includes groups and restores all groups/accounts in one transaction after encryption succeeds. Version 1 remains supported; missing legacy group metadata produces an explicit ungrouped-account notice. Failed encryption, expired sessions or database errors abort the restore instead of returning partial success. The AES-GCM envelope and PBKDF2 settings are unchanged, and version 2 payloads require Authly 0.3.11 or newer to import.
+
 ## Packaging
 
 Windows NSIS installer:

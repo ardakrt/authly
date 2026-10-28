@@ -29,6 +29,31 @@ const input = {
 };
 
 describe('local encrypted account storage', () => {
+  it('checks the captured session after async encryption and before single-account writes', async () => {
+    const database = new LocalDatabase(':memory:');
+    try {
+      let finish!: (value: Buffer) => void;
+      const vault = new TestVault();
+      const service = new AccountService(new AccountRepository(database.connection), {
+        encryptSecret: () =>
+          new Promise((resolve) => {
+            finish = resolve;
+          }),
+        decryptSecret: (value) => vault.decryptSecret(value),
+      });
+      let allowed = true;
+      const pending = service.create(input, () => {
+        if (!allowed) throw new Error('Session revoked');
+      });
+      allowed = false;
+      finish(await vault.encryptSecret(input.secret));
+      await expect(pending).rejects.toThrow('Session revoked');
+      expect(service.list()).toHaveLength(0);
+    } finally {
+      database.close();
+    }
+  });
+
   it('rejects malformed secrets on create and update without changing storage', async () => {
     const database = new LocalDatabase(':memory:');
     try {

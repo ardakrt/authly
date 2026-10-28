@@ -40,6 +40,7 @@ import {
 } from '@shared/schemas/settings';
 import {
   lockStatusSchema,
+  lockActivityRequestSchema,
   removePinRequestSchema,
   setPinRequestSchema,
   verifyPinRequestSchema,
@@ -93,9 +94,9 @@ export function registerAppHandlers(
   ipcMain.handle(IPC_CHANNELS.createAccount, async (event, rawRequest: unknown) => {
     try {
       assertTrustedSender(event, developmentUrl);
-      lockService.assertNotLocked();
+      const assertAccess = lockService.captureSession();
       return accountDtoSchema.parse(
-        await accountService.create(createAccountRequestSchema.parse(rawRequest)),
+        await accountService.create(createAccountRequestSchema.parse(rawRequest), assertAccess),
       );
     } catch {
       throw new Error('Hesap güvenli biçimde kaydedilemedi.');
@@ -105,11 +106,11 @@ export function registerAppHandlers(
   ipcMain.handle(IPC_CHANNELS.importAccounts, async (event, rawRequest: unknown) => {
     try {
       assertTrustedSender(event, developmentUrl);
-      lockService.assertNotLocked();
+      const assertAccess = lockService.captureSession();
       const request = importAccountsRequestSchema.parse(rawRequest);
       return accountDtoSchema
         .array()
-        .parse(await accountService.importAccounts(request, () => lockService.assertNotLocked()));
+        .parse(await accountService.importAccounts(request, assertAccess));
     } catch {
       throw new Error('Hesaplar içe aktarılamadı. Hiçbir hesap kaydedilmedi.');
     }
@@ -118,9 +119,9 @@ export function registerAppHandlers(
   ipcMain.handle(IPC_CHANNELS.updateAccount, async (event, rawRequest: unknown) => {
     try {
       assertTrustedSender(event, developmentUrl);
-      lockService.assertNotLocked();
+      const assertAccess = lockService.captureSession();
       return accountDtoSchema.parse(
-        await accountService.update(updateAccountRequestSchema.parse(rawRequest)),
+        await accountService.update(updateAccountRequestSchema.parse(rawRequest), assertAccess),
       );
     } catch {
       throw new Error('Hesap güvenli biçimde güncellenemedi.');
@@ -140,9 +141,11 @@ export function registerAppHandlers(
   ipcMain.handle(IPC_CHANNELS.getTotpCodes, async (event, rawRequest: unknown) => {
     try {
       assertTrustedSender(event, developmentUrl);
-      lockService.assertNotLocked();
+      const assertAccess = lockService.captureSession();
       getTotpCodesRequestSchema.parse(rawRequest);
-      return totpCodeSchema.array().parse(await accountService.getTotpCodes());
+      const codes = await accountService.getTotpCodes();
+      assertAccess();
+      return totpCodeSchema.array().parse(codes);
     } catch {
       throw new Error('Kodlar güvenli biçimde üretilemedi.');
     }
@@ -161,9 +164,10 @@ export function registerAppHandlers(
   ipcMain.handle(IPC_CHANNELS.copyTotp, async (event, rawRequest: unknown) => {
     try {
       assertTrustedSender(event, developmentUrl);
-      lockService.assertNotLocked();
+      const assertAccess = lockService.captureSession();
       const { accountId } = copyTotpRequestSchema.parse(rawRequest);
       const value = await accountService.getTotpCode(accountId);
+      assertAccess();
       clipboard.writeText(value.code);
       setTimeout(() => {
         if (clipboard.readText() === value.code) clipboard.clear();
@@ -176,9 +180,11 @@ export function registerAppHandlers(
   ipcMain.handle(IPC_CHANNELS.exportBackup, async (event, rawRequest: unknown) => {
     try {
       assertTrustedSender(event, developmentUrl);
-      lockService.assertNotLocked();
+      const assertAccess = lockService.captureSession();
       const { password } = exportBackupRequestSchema.parse(rawRequest);
-      return exportBackupResultSchema.parse(await backupService.exportBackup(password));
+      const result = await backupService.exportBackup(password, assertAccess);
+      assertAccess();
+      return exportBackupResultSchema.parse(result);
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : 'Yedek dışa aktarılamadı.', {
         cause: err,
@@ -189,9 +195,11 @@ export function registerAppHandlers(
   ipcMain.handle(IPC_CHANNELS.importBackup, async (event, rawRequest: unknown) => {
     try {
       assertTrustedSender(event, developmentUrl);
-      lockService.assertNotLocked();
+      const assertAccess = lockService.captureSession();
       const { password } = importBackupRequestSchema.parse(rawRequest);
-      return importBackupResultSchema.parse(await backupService.importBackup(password));
+      const result = await backupService.importBackup(password, assertAccess);
+      assertAccess();
+      return importBackupResultSchema.parse(result);
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : 'Yedek içe aktarılamadı.', {
         cause: err,
@@ -264,6 +272,16 @@ export function registerAppHandlers(
       lockService.lockApp();
     } catch {
       throw new Error('Uygulama kilitlenemedi.');
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.recordActivity, (event, rawRequest: unknown) => {
+    try {
+      assertTrustedSender(event, developmentUrl);
+      lockActivityRequestSchema.parse(rawRequest);
+      lockService.recordActivity();
+    } catch {
+      throw new Error('Kilit oturumu yenilenemedi.');
     }
   });
 

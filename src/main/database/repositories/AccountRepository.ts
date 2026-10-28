@@ -89,6 +89,10 @@ export class AccountRepository {
     })();
   }
 
+  transaction<T>(operation: () => T): T {
+    return this.database.transaction(operation)();
+  }
+
   update(record: AccountRecord): void {
     const result = this.database
       .prepare(
