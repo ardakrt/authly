@@ -9,9 +9,11 @@ import { IPC_CHANNELS, UPDATE_STATE_EVENT } from '@shared/ipc/channels';
 import {
   accountDtoSchema,
   createAccountRequestSchema,
+  importAccountsRequestSchema,
   deleteAccountRequestSchema,
   updateAccountRequestSchema,
   type CreateAccountRequest,
+  type ImportAccountsRequest,
   type DeleteAccountRequest,
   type UpdateAccountRequest,
 } from '@shared/schemas/account';
@@ -58,6 +60,15 @@ const api: AuthappApi = Object.freeze({
         createAccountRequestSchema.parse(request),
       ),
     ),
+  importAccounts: async (request: ImportAccountsRequest) =>
+    accountDtoSchema
+      .array()
+      .parse(
+        await ipcRenderer.invoke(
+          IPC_CHANNELS.importAccounts,
+          importAccountsRequestSchema.parse(request),
+        ),
+      ),
   updateAccount: async (request: UpdateAccountRequest) =>
     accountDtoSchema.parse(
       await ipcRenderer.invoke(

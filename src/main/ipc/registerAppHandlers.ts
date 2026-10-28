@@ -11,6 +11,7 @@ import { IPC_CHANNELS } from '@shared/ipc/channels';
 import {
   accountDtoSchema,
   createAccountRequestSchema,
+  importAccountsRequestSchema,
   deleteAccountRequestSchema,
   listAccountsRequestSchema,
   updateAccountRequestSchema,
@@ -101,6 +102,19 @@ export function registerAppHandlers(
     }
   });
 
+  ipcMain.handle(IPC_CHANNELS.importAccounts, async (event, rawRequest: unknown) => {
+    try {
+      assertTrustedSender(event, developmentUrl);
+      lockService.assertNotLocked();
+      const request = importAccountsRequestSchema.parse(rawRequest);
+      return accountDtoSchema
+        .array()
+        .parse(await accountService.importAccounts(request, () => lockService.assertNotLocked()));
+    } catch {
+      throw new Error('Hesaplar içe aktarılamadı. Hiçbir hesap kaydedilmedi.');
+    }
+  });
+
   ipcMain.handle(IPC_CHANNELS.updateAccount, async (event, rawRequest: unknown) => {
     try {
       assertTrustedSender(event, developmentUrl);
@@ -149,10 +163,7 @@ export function registerAppHandlers(
       assertTrustedSender(event, developmentUrl);
       lockService.assertNotLocked();
       const { accountId } = copyTotpRequestSchema.parse(rawRequest);
-      const value = (await accountService.getTotpCodes()).find(
-        (item) => item.accountId === accountId,
-      );
-      if (!value) throw new Error('Account not found.');
+      const value = await accountService.getTotpCode(accountId);
       clipboard.writeText(value.code);
       setTimeout(() => {
         if (clipboard.readText() === value.code) clipboard.clear();

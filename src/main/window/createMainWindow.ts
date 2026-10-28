@@ -81,6 +81,44 @@ export async function createMainWindow(developmentUrl?: string): Promise<Browser
         );
         if (appShellReady !== true) throw new Error('Renderer app shell was not created.');
 
+        const accountFlowReady: unknown = await window.webContents.executeJavaScript(`
+          (async () => {
+            const api = window.authapp;
+            const fixture = {
+              issuer: 'Smoke fixture', accountName: 'fixture', secret: 'JBSWY3DPEHPK3PXP',
+              algorithm: 'SHA1', digits: 6, period: 30, favorite: false, groupId: null,
+            };
+            const imported = await api.importAccounts({
+              accounts: [fixture, { ...fixture, accountName: 'second fixture' }],
+            });
+            if (imported.length !== 2 || imported.some((item) => 'secret' in item || 'encryptedSecret' in item)) {
+              throw new Error('Account import contract failed.');
+            }
+            const codes = await api.getTotpCodes();
+            if (codes.length !== 2 || codes.some((item) => !/^\\d{6}$/.test(item.code))) {
+              throw new Error('Account generation failed.');
+            }
+            let invalidRejected = false;
+            try { await api.createAccount({ ...fixture, secret: 'INVALID!' }); }
+            catch { invalidRejected = true; }
+            if (!invalidRejected) throw new Error('Invalid secret was accepted.');
+            let rollbackRejected = false;
+            try {
+              await api.importAccounts({ accounts: [fixture, {
+                ...fixture, groupId: 'a4ff59c6-2df2-4136-86ba-78bd57a617d8',
+              }] });
+            } catch { rollbackRejected = true; }
+            if (!rollbackRejected || (await api.listAccounts()).length !== 2) {
+              throw new Error('Atomic account import failed.');
+            }
+            for (const account of imported) await api.deleteAccount({ id: account.id });
+            const single = await api.createAccount(fixture);
+            await api.deleteAccount({ id: single.id });
+            return (await api.listAccounts()).length === 0;
+          })()
+        `);
+        if (accountFlowReady !== true) throw new Error('Account flow smoke failed.');
+
         const screenshotDirectory = process.env['AUTHAPP_SMOKE_SCREENSHOT_DIR'];
         if (screenshotDirectory) {
           await mkdir(screenshotDirectory, { recursive: true });

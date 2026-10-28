@@ -1,6 +1,6 @@
 import * as OTPAuth from 'otpauth';
 import type { CreateAccountRequest } from '@shared/schemas/account';
-import { createAccountRequestSchema } from '@shared/schemas/account';
+import { base32SecretSchema, createAccountRequestSchema } from '@shared/schemas/account';
 
 export interface TotpValue {
   code: string;
@@ -16,7 +16,7 @@ export class TotpService {
     period: number,
     timestamp = Date.now(),
   ): TotpValue {
-    const normalized = secret.replace(/[\s-]/g, '').toUpperCase();
+    const normalized = base32SecretSchema.parse(secret);
     const otpSecret = OTPAuth.Secret.fromBase32(normalized);
     return {
       code: OTPAuth.TOTP.generate({ secret: otpSecret, algorithm, digits, period, timestamp }),

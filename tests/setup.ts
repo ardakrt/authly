@@ -39,6 +39,7 @@ Object.defineProperty(window, 'authapp', {
     }),
     listAccounts: vi.fn().mockResolvedValue([]),
     createAccount: vi.fn(),
+    importAccounts: vi.fn(),
     updateAccount: vi.fn(),
     deleteAccount: vi.fn(),
     getTotpCodes: vi.fn().mockResolvedValue([]),

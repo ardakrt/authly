@@ -2,9 +2,15 @@ import { randomUUID } from 'node:crypto';
 import type {
   AccountDto,
   CreateAccountRequest,
+  ImportAccountsRequest,
   UpdateAccountRequest,
 } from '@shared/schemas/account';
-import { accountDtoSchema } from '@shared/schemas/account';
+import {
+  accountDtoSchema,
+  createAccountRequestSchema,
+  importAccountsRequestSchema,
+  updateAccountRequestSchema,
+} from '@shared/schemas/account';
 import { AccountRepository, type AccountRecord } from '../database/repositories/AccountRepository';
 import type { VaultService } from '../security/VaultService';
 import type { TotpCode } from '@shared/schemas/totp';
@@ -39,23 +45,16 @@ export class AccountService {
 
   async getTotpCodes(): Promise<TotpCode[]> {
     if (!this.totpService) throw new Error('TOTP service unavailable.');
-    return Promise.all(
-      this.repository.list().map(async (account) => {
-        const decrypted = await this.vault.decryptSecret(account.encryptedSecret);
-        if (decrypted.reEncrypted) {
-          this.repository.updateEncryptedSecret(account.id, decrypted.reEncrypted);
-        }
-        return {
-          accountId: account.id,
-          ...this.totpService!.generate(
-            decrypted.secret,
-            account.algorithm,
-            account.digits,
-            account.period,
-          ),
-        };
-      }),
+    const results = await Promise.allSettled(
+      this.repository.list().map((account) => this.getTotpCode(account.id)),
     );
+    return results.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []));
+  }
+
+  async getTotpCode(id: string): Promise<TotpCode> {
+    if (!this.totpService) throw new Error('TOTP service unavailable.');
+    const { secret, algorithm, digits, period } = await this.getTotpSecret(id);
+    return { accountId: id, ...this.totpService.generate(secret, algorithm, digits, period) };
   }
 
   async getTotpSecret(id: string): Promise<{
@@ -79,6 +78,7 @@ export class AccountService {
   }
 
   async create(input: CreateAccountRequest): Promise<AccountDto> {
+    input = createAccountRequestSchema.parse(input);
     const now = Date.now();
     const record: AccountRecord = {
       id: randomUUID(),
@@ -98,7 +98,32 @@ export class AccountService {
     return toDto(record);
   }
 
+  async importAccounts(
+    input: ImportAccountsRequest,
+    assertCanWrite: () => void = () => {},
+  ): Promise<AccountDto[]> {
+    const { accounts } = importAccountsRequestSchema.parse(input);
+    const now = Date.now();
+    const sortOrder = this.repository.list().length;
+    // Finish every asynchronous encryption before opening the synchronous SQLite transaction.
+    const records = await Promise.all(
+      accounts.map(async ({ secret, ...metadata }, index): Promise<AccountRecord> => ({
+        ...metadata,
+        id: randomUUID(),
+        encryptedSecret: await this.vault.encryptSecret(secret),
+        sortOrder: sortOrder + index,
+        createdAt: now,
+        updatedAt: now,
+      })),
+    );
+    const dtos = records.map(toDto);
+    assertCanWrite();
+    this.repository.createMany(records);
+    return dtos;
+  }
+
   async update(input: UpdateAccountRequest): Promise<AccountDto> {
+    input = updateAccountRequestSchema.parse(input);
     const current = this.repository.getById(input.id);
     if (!current) throw new Error('Account not found.');
     const updated: AccountRecord = {

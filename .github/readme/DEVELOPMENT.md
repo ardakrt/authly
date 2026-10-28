@@ -40,6 +40,16 @@ npm run smoke:visual
 
 `smoke:visual` additionally captures the runtime smoke views into a temporary directory reported by the script. Passing static checks alone does not prove packaged Windows/Linux behavior.
 
+The Electron smoke also exercises the real sandboxed preload and main-process account handlers with an isolated in-memory database. It verifies encrypted batch import, TOTP generation, invalid-secret rejection, database rollback after a later insert fails, and account cleanup. It does not access the system clipboard or the user's vault.
+
+### Account input and import boundaries
+
+- Creation, secret updates and backup payloads share canonical Base32 validation. Spaces, hyphens, case and valid padding are normalized; invalid characters, padding and trailing bits are rejected before storage.
+- A legacy unreadable account remains visible with an unavailable-code state. Its failure does not prevent healthy accounts from generating or copying codes.
+- Google Authenticator migration QR input is bounded to 128 KiB and 100 accounts. Truncated protobuf data, overflowing lengths, unknown algorithms/digit counts and non-TOTP accounts are rejected before the confirmation preview.
+- The named `importAccounts` bridge validates both sides of IPC, checks the renderer origin and PIN lock, and rechecks the lock after encryption. Every selected account is inserted in one SQLite transaction; any failure leaves the batch unsaved.
+- These changes do not migrate the database or delete existing accounts. A malformed legacy secret must be replaced from the original provider or the affected account removed.
+
 ## Packaging
 
 Windows NSIS installer:

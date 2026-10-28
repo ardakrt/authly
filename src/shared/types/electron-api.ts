@@ -2,6 +2,7 @@ import type { RuntimeInfo } from '../schemas/runtime';
 import type {
   AccountDto,
   CreateAccountRequest,
+  ImportAccountsRequest,
   DeleteAccountRequest,
   UpdateAccountRequest,
 } from '../schemas/account';
@@ -25,6 +26,7 @@ export interface AuthappApi {
   getRuntimeInfo: () => Promise<RuntimeInfo>;
   listAccounts: () => Promise<AccountDto[]>;
   createAccount: (request: CreateAccountRequest) => Promise<AccountDto>;
+  importAccounts: (request: ImportAccountsRequest) => Promise<AccountDto[]>;
   updateAccount: (request: UpdateAccountRequest) => Promise<AccountDto>;
   deleteAccount: (request: DeleteAccountRequest) => Promise<void>;
   getTotpCodes: () => Promise<TotpCode[]>;

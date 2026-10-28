@@ -91,6 +91,7 @@ export function HomePage(): React.JSX.Element {
         );
       }
       setError(true);
+      setCodes([]);
     } finally {
       setLoading(false);
     }
@@ -126,7 +127,12 @@ export function HomePage(): React.JSX.Element {
             .then((nextCodes) => {
               if (isMounted) setCodes(nextCodes);
             })
-            .catch(() => {});
+            .catch(() => {
+              if (isMounted) {
+                setCodes([]);
+                setError(true);
+              }
+            });
         }
       }
       lastSec = currentSec;
@@ -207,7 +213,12 @@ export function HomePage(): React.JSX.Element {
   };
 
   async function handleCopy(accountId: string): Promise<void> {
-    await window.authapp.copyTotp(accountId);
+    try {
+      await window.authapp.copyTotp(accountId);
+    } catch {
+      setError(true);
+      return;
+    }
     setCopiedAccountId(accountId);
     window.setTimeout(() => {
       setCopiedAccountId((prev) => (prev === accountId ? null : prev));
@@ -304,10 +315,11 @@ export function HomePage(): React.JSX.Element {
 
                     <div className="otp-row">
                       <strong className="otp-code">
-                        {value ? value.code.replace(/(.{3})/g, '$1 ').trim() : '------'}
+                        {value ? value.code.replace(/(.{3})/g, '$1 ').trim() : t('codeUnavailable')}
                       </strong>
                       <button
                         className={`copy-button liquid-glass-pill ${isCopied ? 'is-copied' : ''}`}
+                        disabled={!value}
                         onClick={() => void handleCopy(account.id)}
                       >
                         {isCopied ? (

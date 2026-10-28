@@ -2,6 +2,7 @@ export const IPC_CHANNELS = {
   getRuntimeInfo: 'app:get-runtime-info',
   listAccounts: 'accounts:list',
   createAccount: 'accounts:create',
+  importAccounts: 'accounts:import',
   updateAccount: 'accounts:update',
   deleteAccount: 'accounts:delete',
   getTotpCodes: 'totp:list',
