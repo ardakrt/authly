@@ -22,6 +22,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Audit dependency vulnerabilities
+        run: npm audit --audit-level=high
       - name: Verify on Windows
         if: runner.os == 'Windows'
         run: npm run verify
